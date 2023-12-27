@@ -52,6 +52,7 @@ Service and leadership
 - Core contributor and maintainer to ClimSim's GitHub repo (May 2023 - Present)
 - Professional Development Lead for the Earth System Science Department (Fall 2023 - Present)
 - Learning the Earth with Artificial Intelligence and Physics (LEAP) Parameterization Focus Group Lead (Jan 2023 - May 2023)
+- Managed a student-run data science course for the Data Science Society at UC Berkeley from Aug 2017 to Dec 2018.
 
 Awards
 =======
@@ -59,8 +60,4 @@ Awards
 
 Other
 =======
-Was briefly interested in devising a voting strategy that took the best parts of plurality and approval voting and generalized them as a "First Choice Weighted Approval Voting System," and I wrote a preprint of the work with my good friend Peter Butler, which can be found here:
-
-https://www.researchgate.net/publication/341816279_Evaluating_the_Properties_of_a_First_Choice_Weighted_Approval_Voting_System#fullTextFileContent
-
-This work was done under the supervision of UC Berkeley math professor Nikhil Srivastava. If you would like to extend this work and publish it somewhere or find it somewhat interesting, please feel free to reach out! I will not be able to personally dedicate a lot of time to it, however.
+Was briefly interested in devising a voting strategy that took the best parts of plurality and approval voting and generalized them as a "First Choice Weighted Approval Voting System," and I wrote a preprint of the work with my good friend Peter Butler, which can be found [here](https://www.researchgate.net/publication/341816279_Evaluating_the_Properties_of_a_First_Choice_Weighted_Approval_Voting_System#fullTextFileContent).
