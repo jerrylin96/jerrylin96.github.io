@@ -18,9 +18,11 @@ Education
 Work experience
 ======
 * Graduate Research Assistant @ Computational Clouds and Climate Lab (Sep 2020 - Present)
-  * Currently working on uncertainty calibration for stochastic neural network parameterizations
   * Increased sampling of hybrid physics-ML climate simulations by an order-of-magnitude to investigate which design decisions are most conducive to stably accurate coupled behavior and out-of-distribution coupled generalization.
   * Core contributor to ClimSim, which won the equivalent of the best paper award for the NeurIPS Datasets and Benchmarks Track.
+
+* Graduate Research Assistant @ Berkeley Lab (Jun 2024 - Aug 2024)
+  * Worked on improving asset-level wind power forecasts in joint partnership with Vayuh.ai
 
 * Public Utilities Regulatory Analyst @ California Public Utilities Commission (Jan - Aug 2020)
   * Conducted hazard rate analysis for utility infrastructure that formed part of CPUC's counterproposal for Southern California Edison's proposed energy rate hikes
@@ -49,6 +51,8 @@ Teaching
   
 Service and leadership
 =======
+- Ran a [$50,000 Kaggle competition](https://www.kaggle.com/competitions/leap-atmospheric-physics-ai-climsim) on the ClimSim dataset
+- Co-organized a [Machine Learning for Earth System Modeling (ML4ESM) Workshop](https://leap-stc.github.io/ml4esm-workshop/) at ICML in 2024
 - Core contributor and maintainer to ClimSim's GitHub repo (May 2023 - Present)
 - Professional Development Lead for the Earth System Science Department (Fall 2023 - Present)
 - Learning the Earth with Artificial Intelligence and Physics (LEAP) Parameterization Focus Group Lead (Jan 2023 - May 2023)
