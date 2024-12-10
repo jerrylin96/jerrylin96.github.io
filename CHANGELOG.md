@@ -237,7 +237,7 @@
 
 ### Maintenance
 
-- Remove duplicate `fa-twitter` and `fa-twitter-square` classes from `_utilities.scss`. [#302](https://github.com/mmistakes/minimal-mistakes/issues/302)
+- Remove duplicate `fa-bluesky` and `fa-bluesky-square` classes from `_utilities.scss`. [#302](https://github.com/mmistakes/minimal-mistakes/issues/302)
 
 - Document installing additional Jekyll gem dependencies when using `gem "jekyll"` instead of `gem "github-pages"` to avoid any errors on run. [#305](https://github.com/mmistakes/minimal-mistakes/issues/305)
 
@@ -282,7 +282,7 @@
 - Fix `author_profile` toggle when assigned in a `_layout` [#285](https://github.com/mmistakes/minimal-mistakes/issues/285)
 - Fix typo in `build:all` npm script [#283](https://github.com/mmistakes/minimal-mistakes/pull/283)
 - Fix URL typo documentation [#287](https://github.com/mmistakes/minimal-mistakes/issues/287)
-- SEO author bug. If `twitter.username` is set and `author.twitter` is `nil` bad things happen. [#289](https://github.com/mmistakes/minimal-mistakes/issues/289)
+- SEO author bug. If `bluesky.username` is set and `author.bluesky` is `nil` bad things happen. [#289](https://github.com/mmistakes/minimal-mistakes/issues/289)
 
 ## [3.1.2](https://github.com/mmistakes/minimal-mistakes/releases/tag/3.1.2)
 
