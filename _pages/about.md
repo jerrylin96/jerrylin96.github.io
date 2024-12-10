@@ -16,4 +16,4 @@ more about me
 ======
 Outside of immediate research interests, I am broadly interested in the protection of democratic institutions and ways technology can be oriented towards (and not against) societal progress. I also enjoy running, ebiking, board games, and learning new things.
 
-For further inquiries, you can contact me at jerryL9 _at_ uci.edu. 
+For further inquiries, you can contact me at jerryL9 _at_ uci.edu. You can also find me on Bluesky at jlin96.bsky.social. 
