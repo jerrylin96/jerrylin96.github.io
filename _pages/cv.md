@@ -13,11 +13,14 @@ Education
 ======
 * B.A. in Applied Mathematics, University of California, Berkeley, 2018
 * M.S. in Earth System Science, University of California, Irvine, 2022
-* Ph.D in Earth System Science, University of California, Irvine, 2025 (expected)
+* Ph.D in Earth System Science, University of California, Irvine, 2025
 
 Work experience
 ======
-* Graduate Research Assistant @ Computational Clouds and Climate Lab (Sep 2020 - Present)
+* Postdoctoral Researcher at Boston University
+  * Working with Libby Barnes on a new project.
+
+* Graduate Research Assistant @ Computational Clouds and Climate Lab (Sep 2020 - July 2025)
   * Increased sampling of hybrid physics-ML climate simulations by an order-of-magnitude to investigate which design decisions are most conducive to stably accurate coupled behavior and out-of-distribution coupled generalization.
   * Core contributor to ClimSim, which won the equivalent of the best paper award for the NeurIPS Datasets and Benchmarks Track.
 

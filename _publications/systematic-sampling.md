@@ -1,9 +1,9 @@
 ---
-title: "Sampling Hybrid Climate Simulation at Scale to Reliably Improve Machine Learning Parameterization"
+title: "Navigating the Noise: Bringing Clarity to ML Parameterization with O(100) Ensembles"
+
 collection: publications
-permalink: /publication/sampling-scale
-paperurl: 'https://arxiv.org/pdf/2309.16177.pdf'
+permalink: /publication/navigating-the-noise
+paperurl: 'https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2024MS004551'
 ---
 
-[Download paper here](https://arxiv.org/pdf/2309.16177.pdf)
-
+[Download paper here](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2024MS004551)
