@@ -82,8 +82,8 @@ analytics:
 author:
   name             : "Jerry Lin"
   avatar           : "bio-photo.jpg"
-  bio              : "PhD candidate in Earth System Science at UC Irvine working on hybrid physics-ML climate models"
-  location         : "Irvine, CA"
+  bio              : "Postdoctoral Researcher at Boston University working under Libby Barnes"
+  location         : "Boston, MA"
   employer         :
   googlescholar    : "https://scholar.google.com/citations?authuser=1&user=r8zHDdMAAAAJ"
   email            :
@@ -108,7 +108,7 @@ author:
   stackoverflow    : # http://stackoverflow.com/users/123456/username
   steam            :
   tumblr           :
-  twitter          : "jlin404"
+  bluesky          : "jlin404"
   vine             :
   weibo            :
   xing             :
