@@ -31,7 +31,7 @@ Work experience
   * Conducted hazard rate analysis for utility infrastructure that formed part of CPUC's counterproposal for Southern California Edison's proposed energy rate hikes
 
 * Intern @ California Public Utilities Commission (Summer 2017): 
-  * Created a flexible machine learning pipeline for predicitng which customers would be most at risk of defaulting on utility bills
+  * Created a flexible machine learning pipeline for predicting which customers would be most at risk of defaulting on utility bills
   * Co-led workshops to teach employees how to use R and take over projects I participated in after I left
   * Created standards for future data submission from California utilities
 
