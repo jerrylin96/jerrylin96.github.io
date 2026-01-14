@@ -16,4 +16,4 @@ You can download an up-to-date copy of my resume [here](https://typst.app/projec
 
 non work stuff
 ======
-Outside of immediate research interests, I am broadly interested in the protection of democratic institutions and ways technology can be oriented towards societal progress. I also enjoy running, ebiking, board games, and learning new things. I also maintain a personal blog at [coupledsystems.leaflet.pub](https://coupledsystems.leaflet.pub/).
+Outside of immediate research interests, I am broadly interested in the protection of democratic institutions and ways technology can be oriented towards societal progress. I also enjoy running, ebiking, board games, and learning new things. I am active on [Bluesky](https://bsky.app/profile/jlin404.com) and occasionally post on a personal blog at [coupledsystems.leaflet.pub](https://coupledsystems.leaflet.pub/).
