@@ -17,3 +17,7 @@ non work stuff
 Outside of immediate research interests, I am broadly interested in the protection of democratic institutions and ways technology can be oriented towards societal progress. I also enjoy running, ebiking, board games, and learning new things.
 
 For further inquiries, you can contact me at jlin404 _at_ bu.edu. You can also catch me on Bluesky with handle @jlin404.com.
+
+personal blog
+======
+[Coupled Systems](https://coupledsystems.leaflet.pub/)
