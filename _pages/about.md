@@ -12,6 +12,8 @@ I am a postdoctoral researcher with Libby Barnes at Boston University. Previousl
 
 I believe machine learning is uniquely suited for positive societal impact in climate science because of access to large volumes of data, an explosion of research and interest in machine learning / AI generally, and the human desire to leave the world in a better place than we found it. If you are a machine learner OR a climate science domain expert looking to collaborate, please do not hesitate to contact me at jlin404@bu.edu.
 
+You can download an up-to-date copy of my resume [here](https://typst.app/project/rWiymTG7S2KMEfmP53KI1p).
+
 non work stuff
 ======
 Outside of immediate research interests, I am broadly interested in the protection of democratic institutions and ways technology can be oriented towards societal progress. I also enjoy running, ebiking, board games, and learning new things. I also maintain a personal blog at [coupledsystems.leaflet.pub](https://coupledsystems.leaflet.pub/).
