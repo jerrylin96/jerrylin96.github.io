@@ -1,5 +1,5 @@
 /* Poker Hand Strength Trainer */
-(function() {
+(function(exports) {
   var RANKS = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
   var SUITS = ['s','h','d','c'];
   var SUIT_SYMBOLS = { s: '\u2660', h: '\u2665', d: '\u2666', c: '\u2663' };
@@ -306,5 +306,19 @@
     area.appendChild(restartBtn);
   }
 
-  window.startGame = startGame;
-})();
+  exports.cardRank = cardRank;
+  exports.cardSuit = cardSuit;
+  exports.cardName = cardName;
+  exports.cardColor = cardColor;
+  exports.fullDeck = fullDeck;
+  exports.shuffle = shuffle;
+  exports.evaluate5 = evaluate5;
+  exports.bestOf7 = bestOf7;
+  exports.compareHands = compareHands;
+  exports.computeEquity = computeEquity;
+  exports.HAND_NAMES = HAND_NAMES;
+
+  if (typeof window !== 'undefined') {
+    window.startGame = startGame;
+  }
+})(typeof module !== 'undefined' && module.exports ? module.exports : {});
