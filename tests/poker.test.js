@@ -174,13 +174,12 @@ describe('evaluate5 - kicker ordering', function() {
 
 describe('bestOf7', function() {
   test('finds the best hand from 7 cards', function() {
-    /* Board has flush draw in hearts, hero has heart flush */
     var cards = [
       card(RA, HEARTS), card(RK, HEARTS), card(RQ, HEARTS), card(RJ, HEARTS), card(R2, CLUBS),
       card(R9, HEARTS), card(R3, DIAMONDS)
     ];
     var result = poker.bestOf7(cards);
-    expect(result[0]).toBe(5); /* flush */
+    expect(result[0]).toBe(5);
   });
 
   test('finds straight flush over flush', function() {
@@ -189,26 +188,52 @@ describe('bestOf7', function() {
       card(RA, CLUBS), card(RK, CLUBS)
     ];
     var result = poker.bestOf7(cards);
-    expect(result[0]).toBe(8); /* straight flush */
+    expect(result[0]).toBe(8);
   });
 
   test('finds full house from two trips', function() {
-    /* Two sets of trips -> best full house */
     var cards = [
       card(RA, SPADES), card(RA, HEARTS), card(RA, DIAMONDS),
       card(RK, SPADES), card(RK, HEARTS), card(RK, DIAMONDS),
       card(R2, CLUBS)
     ];
     var result = poker.bestOf7(cards);
-    expect(result[0]).toBe(6); /* full house */
-    expect(result[1]).toBe(RA); /* aces full */
+    expect(result[0]).toBe(6);
+    expect(result[1]).toBe(RA);
     expect(result[2]).toBe(RK);
   });
 });
 
-describe('computeEquity', function() {
+describe('bestOfN', function() {
+  test('evaluates exactly 5 cards directly', function() {
+    var cards = [card(RA, SPADES), card(RK, HEARTS), card(RQ, DIAMONDS), card(RJ, CLUBS), card(R9, SPADES)];
+    var result = poker.bestOfN(cards);
+    expect(result[0]).toBe(0);
+  });
+
+  test('finds best hand from 6 cards', function() {
+    /* 6 cards with a flush possible in hearts */
+    var cards = [
+      card(RA, HEARTS), card(RK, HEARTS), card(RQ, HEARTS), card(RJ, HEARTS), card(R9, HEARTS),
+      card(R2, CLUBS)
+    ];
+    var result = poker.bestOfN(cards);
+    expect(result[0]).toBe(5); /* flush */
+  });
+
+  test('finds best hand from 6 cards - pair vs high card', function() {
+    var cards = [
+      card(RA, SPADES), card(RA, HEARTS), card(RK, DIAMONDS), card(RQ, CLUBS), card(RJ, SPADES),
+      card(R2, HEARTS)
+    ];
+    var result = poker.bestOfN(cards);
+    expect(result[0]).toBe(1); /* pair of aces */
+    expect(result[1]).toBe(RA);
+  });
+});
+
+describe('computeEquity (backward compatible)', function() {
   test('royal flush has ~100% equity', function() {
-    /* Board: Ts Js Qs, Hero: As Ks -> royal flush on flop already with 2 more board cards */
     var board = [card(RT, SPADES), card(RJ, SPADES), card(RQ, SPADES), card(R2, HEARTS), card(R3, DIAMONDS)];
     var hero = [card(RA, SPADES), card(RK, SPADES)];
     var equity = poker.computeEquity(board, hero);
@@ -230,14 +255,116 @@ describe('computeEquity', function() {
     expect(equity).toBeLessThanOrEqual(100);
   });
 
-  test('total opponent combinations is C(45,2) = 990', function() {
-    /* Verify indirectly: a hand that ties with nothing and loses to nothing should be ~100% */
-    /* Royal flush on board + hero doesn't improve it -> many ties expected */
+  test('board royal flush gives ~50% equity (all ties)', function() {
     var board = [card(RT, SPADES), card(RJ, SPADES), card(RQ, SPADES), card(RK, SPADES), card(RA, SPADES)];
     var hero = [card(R2, HEARTS), card(R3, HEARTS)];
     var equity = poker.computeEquity(board, hero);
-    /* Everyone ties with the board royal flush, so equity should be ~50% (ties count half) */
     expect(equity).toBeCloseTo(50, 0);
+  });
+});
+
+describe('computeEquityRiver (detailed)', function() {
+  test('returns detailed result object', function() {
+    var board = [card(RT, SPADES), card(RJ, SPADES), card(RQ, SPADES), card(R2, HEARTS), card(R3, DIAMONDS)];
+    var hero = [card(RA, SPADES), card(RK, SPADES)];
+    var result = poker.computeEquityRiver(board, hero);
+    expect(result).toHaveProperty('equity');
+    expect(result).toHaveProperty('wins');
+    expect(result).toHaveProperty('ties');
+    expect(result).toHaveProperty('losses');
+    expect(result).toHaveProperty('total');
+    expect(result).toHaveProperty('heroHand');
+    expect(result).toHaveProperty('method');
+    expect(result.total).toBe(990);
+    expect(result.wins + result.ties + result.losses).toBe(990);
+    expect(result.heroHand).toBe('Straight Flush');
+  });
+});
+
+describe('computeEquityTurn (exact)', function() {
+  test('returns detailed result with correct total matchups', function() {
+    var board4 = [card(RT, SPADES), card(RJ, SPADES), card(RQ, SPADES), card(R2, HEARTS)];
+    var hero = [card(RA, SPADES), card(RK, SPADES)];
+    var result = poker.computeEquityTurn(board4, hero);
+    expect(result).toHaveProperty('equity');
+    expect(result).toHaveProperty('wins');
+    expect(result).toHaveProperty('ties');
+    expect(result).toHaveProperty('losses');
+    expect(result).toHaveProperty('total');
+    expect(result).toHaveProperty('heroHand');
+    /* 46 river cards x C(45,2)=990 opponents = 45540 */
+    expect(result.total).toBe(45540);
+    expect(result.wins + result.ties + result.losses).toBe(45540);
+    expect(result.equity).toBeGreaterThan(80);
+  });
+
+  test('equity is between 0 and 100', function() {
+    var board4 = [card(R2, SPADES), card(R5, HEARTS), card(R8, DIAMONDS), card(RJ, CLUBS)];
+    var hero = [card(R9, HEARTS), card(RT, DIAMONDS)];
+    var result = poker.computeEquityTurn(board4, hero);
+    expect(result.equity).toBeGreaterThanOrEqual(0);
+    expect(result.equity).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('computeEquityMC (Monte Carlo)', function() {
+  test('returns detailed result object', function() {
+    var hero = [card(RA, SPADES), card(RK, SPADES)];
+    var result = poker.computeEquityMC([], hero, 1000);
+    expect(result).toHaveProperty('equity');
+    expect(result).toHaveProperty('wins');
+    expect(result).toHaveProperty('ties');
+    expect(result).toHaveProperty('losses');
+    expect(result).toHaveProperty('total');
+    expect(result).toHaveProperty('method');
+    expect(result.total).toBe(1000);
+    expect(result.heroHand).toBeNull(); /* no board = no hero hand */
+  });
+
+  test('preflop pocket aces have high equity', function() {
+    var hero = [card(RA, SPADES), card(RA, HEARTS)];
+    var result = poker.computeEquityMC([], hero, 5000);
+    expect(result.equity).toBeGreaterThan(75);
+  });
+
+  test('flop equity returns hero hand name', function() {
+    var board3 = [card(RT, SPADES), card(RJ, SPADES), card(RQ, SPADES)];
+    var hero = [card(RA, SPADES), card(RK, SPADES)];
+    var result = poker.computeEquityMC(board3, hero, 1000);
+    expect(result.heroHand).toBe('Straight Flush');
+    expect(result.equity).toBeGreaterThan(90);
+  });
+});
+
+describe('computeStreetEquity (dispatcher)', function() {
+  test('uses exact enumeration for 5-card board', function() {
+    var board = [card(RT, SPADES), card(RJ, SPADES), card(RQ, SPADES), card(R2, HEARTS), card(R3, DIAMONDS)];
+    var hero = [card(RA, SPADES), card(RK, SPADES)];
+    var result = poker.computeStreetEquity(board, hero);
+    expect(result.total).toBe(990);
+    expect(result.method).toContain('Exact');
+  });
+
+  test('uses exact enumeration for 4-card board', function() {
+    var board4 = [card(RT, SPADES), card(RJ, SPADES), card(RQ, SPADES), card(R2, HEARTS)];
+    var hero = [card(RA, SPADES), card(RK, SPADES)];
+    var result = poker.computeStreetEquity(board4, hero);
+    expect(result.total).toBe(45540);
+  });
+
+  test('uses Monte Carlo for 3-card board', function() {
+    var board3 = [card(RT, SPADES), card(RJ, SPADES), card(RQ, SPADES)];
+    var hero = [card(RA, SPADES), card(RK, SPADES)];
+    var result = poker.computeStreetEquity(board3, hero);
+    expect(result.total).toBe(10000);
+    expect(result.method).toContain('Monte Carlo');
+  });
+
+  test('uses Monte Carlo for preflop (0-card board)', function() {
+    var hero = [card(RA, SPADES), card(RK, SPADES)];
+    var result = poker.computeStreetEquity([], hero);
+    expect(result.total).toBe(10000);
+    expect(result.method).toContain('Monte Carlo');
   });
 });
 
