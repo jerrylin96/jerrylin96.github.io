@@ -1,0 +1,16 @@
+---
+layout: compress
+---
+<!doctype html>
+<html lang="{{ site.locale | slice: 0,2 | default: 'en' }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title }} | {{ site.title }}</title>
+    <link rel="stylesheet" href="{{ '/assets/climateshift/index.css' | relative_url }}">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="{{ '/assets/climateshift/app.js' | relative_url }}"></script>
+  </body>
+</html>
