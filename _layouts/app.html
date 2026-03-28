@@ -7,10 +7,15 @@ layout: compress
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page.title }} | {{ site.title }}</title>
+    <meta name="description" content="ClimateShift Alpha: AI-powered ESG portfolio manager. Construct high-performance sustainable portfolios using Google Gemini.">
+    <meta property="og:title" content="{{ page.title }} | {{ site.title }}">
+    <meta property="og:description" content="AI-powered ESG portfolio manager. Construct high-performance sustainable portfolios using Google Gemini.">
+    <meta property="og:type" content="website">
+    <style>@keyframes cs-spin{to{transform:rotate(360deg)}}</style>
     <link rel="stylesheet" href="{{ '/assets/climateshift/index.css' | relative_url }}">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div style="min-height:100vh;background:#0f172a;display:flex;align-items:center;justify-content:center;"><div style="text-align:center;color:#64748b;font-family:ui-sans-serif,system-ui,sans-serif;"><div style="width:32px;height:32px;border:2px solid #1e293b;border-top-color:#10b981;border-radius:50%;animation:cs-spin .8s linear infinite;margin:0 auto 12px;"></div><p style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;margin:0;">Loading...</p></div></div></div>
     <script type="module" src="{{ '/assets/climateshift/app.js' | relative_url }}"></script>
   </body>
 </html>
