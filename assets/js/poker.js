@@ -1,4 +1,4 @@
-/* Poker Hand Strength Trainer */
+/* 1v1 Texas Hold'em vs GTO Bot */
 (function(exports) {
   var RANKS = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
   var SUITS = ['s','h','d','c'];
@@ -269,307 +269,474 @@
     return computeEquityRiver(board, hero).equity;
   }
 
-  /* ===== Game state ===== */
-  var STREET_NAMES = ['Pre-flop', 'Flop', 'Turn'];
-  var STREET_BOARD_COUNTS = [0, 3, 4];
+  /* ===== 1v1 GTO Bot Game ===== */
 
-  var round = 0;
-  var street = 0; /* 0=preflop, 1=flop, 2=turn */
-  var board = [];
-  var hero = [];
-  var streetErrors = [[], [], []]; /* errors per street */
-  var allErrors = [];
+  var STARTING_STACK = 200;
+  var SMALL_BLIND = 1;
+  var BIG_BLIND = 2;
+  var STREET_NAMES_G = ['Pre-flop', 'Flop', 'Turn', 'River'];
+  var BOARD_COUNTS_G = [0, 3, 4, 5];
+  var NUM_ROUNDS = 10;
+
+  var gs = null;
+
+  function actorLabel(a) { return a === 'player' ? 'You' : 'Bot'; }
+  function stackOf(a) { return a === 'player' ? gs.playerStack : gs.botStack; }
+  function committedOf(a) { return a === 'player' ? gs.playerCommitted : gs.botCommitted; }
+  function setCommitted(a, v) { if (a === 'player') gs.playerCommitted = v; else gs.botCommitted = v; }
+  function addStack(a, v) { if (a === 'player') gs.playerStack += v; else gs.botStack += v; }
+  function subStack(a, v) { if (a === 'player') gs.playerStack -= v; else gs.botStack -= v; }
+
+  function addLog(msg) {
+    gs.log.unshift(msg);
+    if (gs.log.length > 8) gs.log.pop();
+  }
 
   function startGame() {
-    round = 0;
-    streetErrors = [[], [], []];
-    allErrors = [];
-    nextRound();
+    gs = {
+      playerStack: STARTING_STACK,
+      botStack: STARTING_STACK,
+      pot: 0,
+      playerCommitted: 0,
+      botCommitted: 0,
+      board: [],
+      playerHand: [],
+      botHand: [],
+      dealerIsPlayer: Math.random() < 0.5,
+      roundNum: 0,
+      roundsPlayed: 0,
+      street: 0,
+      toAct: null,
+      sbActor: null,
+      bbActor: null,
+      bbActedVoluntarily: false,
+      prevActionWasCheck: false,
+      phase: 'idle',
+      log: []
+    };
+    startRound();
+  }
+
+  function startRound() {
+    gs.roundNum++;
+    gs.pot = 0;
+    gs.playerCommitted = 0;
+    gs.botCommitted = 0;
+    gs.street = 0;
+    gs.bbActedVoluntarily = false;
+    gs.prevActionWasCheck = false;
+    gs.phase = 'betting';
+    gs.log = [];
+
+    /* In heads-up: dealer = small blind = button */
+    gs.sbActor = gs.dealerIsPlayer ? 'player' : 'bot';
+    gs.bbActor = gs.dealerIsPlayer ? 'bot' : 'player';
+
+    var deck = shuffle(fullDeck());
+    gs.playerHand = [deck[0], deck[2]];
+    gs.botHand = [deck[1], deck[3]];
+    gs.board = deck.slice(4, 9); /* full board dealt face-down, revealed per street */
+
+    /* Post blinds */
+    var sb = gs.sbActor, bb = gs.bbActor;
+    var sbAmt = Math.min(SMALL_BLIND, stackOf(sb));
+    var bbAmt = Math.min(BIG_BLIND, stackOf(bb));
+    subStack(sb, sbAmt); setCommitted(sb, sbAmt);
+    subStack(bb, bbAmt); setCommitted(bb, bbAmt);
+    gs.pot = sbAmt + bbAmt;
+    addLog(actorLabel(sb) + ' posts SB ' + sbAmt);
+    addLog(actorLabel(bb) + ' posts BB ' + bbAmt);
+
+    /* If either player is all-in after blinds, run out the board */
+    if (stackOf(sb) === 0 || stackOf(bb) === 0) {
+      gs.street = 3;
+      doShowdown();
+      return;
+    }
+
+    /* Preflop: SB acts first in heads-up */
+    gs.toAct = gs.sbActor;
+    renderGame();
+    if (gs.toAct === 'bot') setTimeout(botAct, 900);
+  }
+
+  /* Core action handler */
+  function processAction(actor, action, betTotal) {
+    var other = actor === 'player' ? 'bot' : 'player';
+    var myComm = committedOf(actor);
+    var oppComm = committedOf(other);
+
+    if (action === 'fold') {
+      addLog(actorLabel(actor) + ' folds.');
+      addStack(other, gs.pot);
+      gs.pot = 0;
+      endRound(other, null);
+      return;
+    }
+
+    if (action === 'check') {
+      addLog(actorLabel(actor) + ' checks.');
+      if (gs.street === 0 && actor === gs.bbActor) gs.bbActedVoluntarily = true;
+      if (gs.prevActionWasCheck) {
+        advanceStreet();
+        return;
+      }
+      gs.prevActionWasCheck = true;
+      gs.toAct = other;
+      renderGame();
+      if (gs.toAct === 'bot') setTimeout(botAct, 900);
+      return;
+    }
+
+    if (action === 'call') {
+      var toCallFull = oppComm - myComm;
+      var toCallActual = Math.min(toCallFull, stackOf(actor));
+      var uncalled = toCallFull - toCallActual;
+      subStack(actor, toCallActual);
+      setCommitted(actor, myComm + toCallActual);
+      gs.pot += toCallActual;
+      if (uncalled > 0) {
+        /* Return uncalled portion to opponent (player called all-in for less) */
+        addStack(other, uncalled);
+        setCommitted(other, oppComm - uncalled);
+        gs.pot -= uncalled;
+      }
+      addLog(actorLabel(actor) + ' calls ' + toCallActual + '.');
+      if (gs.street === 0 && actor === gs.bbActor) gs.bbActedVoluntarily = true;
+      /* Preflop SB limp: BB still has option */
+      if (gs.street === 0 && actor === gs.sbActor && !gs.bbActedVoluntarily) {
+        gs.toAct = other;
+        gs.prevActionWasCheck = false;
+        renderGame();
+        if (gs.toAct === 'bot') setTimeout(botAct, 900);
+        return;
+      }
+      advanceStreet();
+      return;
+    }
+
+    if (action === 'bet' || action === 'raise') {
+      /* betTotal = new total commitment for this actor this street */
+      var additional = Math.min(betTotal - myComm, stackOf(actor));
+      betTotal = myComm + additional;
+      subStack(actor, additional);
+      setCommitted(actor, betTotal);
+      gs.pot += additional;
+      var verb = action === 'bet' ? 'bets ' : 'raises to ';
+      addLog(actorLabel(actor) + ' ' + verb + betTotal + '.');
+      gs.prevActionWasCheck = false;
+      if (gs.street === 0 && actor === gs.bbActor) gs.bbActedVoluntarily = true;
+      gs.toAct = other;
+      renderGame();
+      if (gs.toAct === 'bot') setTimeout(botAct, 900);
+      return;
+    }
+  }
+
+  function advanceStreet() {
+    gs.playerCommitted = 0;
+    gs.botCommitted = 0;
+    gs.prevActionWasCheck = false;
+
+    if (gs.street >= 3) {
+      doShowdown();
+      return;
+    }
+
+    gs.street++;
+    addLog('\u2014 ' + STREET_NAMES_G[gs.street] + ' \u2014');
+
+    /* If either player is all-in, auto-advance remaining streets */
+    if (stackOf('player') === 0 || stackOf('bot') === 0) {
+      renderGame();
+      setTimeout(function() { advanceStreet(); }, 1000);
+      return;
+    }
+
+    /* Postflop: BB (non-dealer, out-of-position) acts first */
+    gs.toAct = gs.bbActor;
+    renderGame();
+    if (gs.toAct === 'bot') setTimeout(botAct, 900);
+  }
+
+  function doShowdown() {
+    gs.phase = 'showdown';
+    var board5 = gs.board.slice(0, 5);
+    var pVal = bestOf7(board5.concat(gs.playerHand));
+    var bVal = bestOf7(board5.concat(gs.botHand));
+    var cmp = compareHands(pVal, bVal);
+    var winner;
+
+    if (cmp > 0) {
+      winner = 'player';
+      addLog('You win with ' + handName(pVal) + '!');
+    } else if (cmp < 0) {
+      winner = 'bot';
+      addLog('Bot wins with ' + handName(bVal) + '.');
+    } else {
+      winner = 'tie';
+      addLog('Split pot \u2014 ' + handName(pVal) + '.');
+    }
+
+    if (winner === 'tie') {
+      var half = Math.floor(gs.pot / 2);
+      gs.playerStack += half;
+      gs.botStack += gs.pot - half;
+    } else {
+      addStack(winner, gs.pot);
+    }
+    gs.pot = 0;
+    endRound(winner, { pVal: pVal, bVal: bVal });
+  }
+
+  function endRound(winner, showdownInfo) {
+    gs.roundsPlayed++;
+    var isGameOver = gs.roundsPlayed >= NUM_ROUNDS || gs.playerStack <= 0 || gs.botStack <= 0;
+    gs.phase = isGameOver ? 'gameover' : 'round_end';
+    if (!isGameOver) gs.dealerIsPlayer = !gs.dealerIsPlayer;
+    renderGame(showdownInfo, isGameOver);
+  }
+
+  /* ===== GTO Bot AI ===== */
+
+  function botAct() {
+    if (!gs || gs.toAct !== 'bot' || gs.phase !== 'betting') return;
+    var decision = botDecide();
+    processAction('bot', decision.action, decision.amount);
+  }
+
+  function botDecide() {
+    var boardKnown = gs.board.slice(0, BOARD_COUNTS_G[gs.street]);
+    /* Bot uses Monte Carlo vs random hands — cannot see player's cards */
+    var simResult = computeEquityMC(boardKnown, gs.botHand, 500);
+    var equity = simResult.equity / 100;
+
+    var myComm = gs.botCommitted;
+    var oppComm = gs.playerCommitted;
+    var toCall = oppComm - myComm;
+    var pot = gs.pot;
+    var myStack = gs.botStack;
+    var facingBet = toCall > 0;
+
+    /* Slightly inflate preflop equity estimate to play aggressively heads-up */
+    var adjEq = gs.street === 0 ? Math.min(1, equity * 1.08) : equity;
+
+    if (facingBet) {
+      var potOdds = toCall / (pot + toCall);
+
+      if (adjEq > 0.65) {
+        /* Strong hand: raise ~40% of time for value/balance */
+        var raiseTotal = Math.min(myComm + Math.max(toCall + pot, toCall * 3), myComm + myStack);
+        if (raiseTotal > oppComm && Math.random() < 0.40) {
+          return { action: 'raise', amount: raiseTotal };
+        }
+        return { action: 'call' };
+      }
+
+      if (adjEq > potOdds + 0.08) return { action: 'call' };
+
+      if (adjEq > potOdds - 0.06) {
+        /* Marginal: mixed call/fold (makes us harder to exploit) */
+        var callFreq = (adjEq - (potOdds - 0.06)) / 0.14;
+        return Math.random() < callFreq ? { action: 'call' } : { action: 'fold' };
+      }
+
+      /* Below pot odds: bluff-catch with frequency ≈ potOdds (GTO indifference) */
+      return Math.random() < potOdds * 0.3 ? { action: 'call' } : { action: 'fold' };
+    }
+
+    /* Not facing a bet: check or bet */
+
+    /* Preflop SB opening: raise wide (GTO HU raises ~80% of buttons) */
+    if (gs.street === 0 && gs.sbActor === 'bot' && !gs.bbActedVoluntarily) {
+      var openRaise = Math.min(myComm + Math.floor(BIG_BLIND * 2.5), myComm + myStack);
+      if (adjEq > 0.44) return { action: 'raise', amount: openRaise };
+      if (Math.random() < 0.40) return { action: 'raise', amount: openRaise };
+      return { action: 'call' }; /* limp worst hands */
+    }
+
+    var betAdd = Math.max(BIG_BLIND, Math.floor(pot * 0.5));
+    betAdd = Math.min(betAdd, myStack);
+    var betTotal = myComm + betAdd;
+
+    /* Value range: polarized bet (strong + air, check middle) */
+    if (adjEq > 0.60) {
+      var valFreq = Math.min(0.85, (adjEq - 0.60) / 0.30 * 0.65 + 0.40);
+      if (Math.random() < valFreq) return { action: 'bet', amount: betTotal };
+      return { action: 'check' };
+    }
+
+    /* Bluff range: frequency calibrated so opponent is indifferent to calling */
+    if (adjEq < 0.33) {
+      var bluffFreq = betAdd / (pot + 2 * betAdd);
+      bluffFreq = Math.min(0.35, bluffFreq);
+      if (Math.random() < bluffFreq) return { action: 'bet', amount: betTotal };
+      return { action: 'check' };
+    }
+
+    /* Middle range: mostly check, occasional protection bet */
+    if (Math.random() < 0.12) return { action: 'bet', amount: betTotal };
+    return { action: 'check' };
+  }
+
+  /* ===== UI Rendering ===== */
+
+  function cardHtml(c, hidden) {
+    if (hidden) return '<div class="card face-down">?</div>';
+    return '<div class="card ' + cardColor(c) + '">' + cardName(c) + '</div>';
+  }
+
+  function renderGame(showdownInfo, isGameOver) {
+    var area = document.getElementById('game-area');
+    if (!area || !gs) return;
+
+    var html = '';
+    var revealBot = !!(showdownInfo || gs.phase === 'showdown');
+
+    /* ── Header ── */
+    html += '<div class="game-header">';
+    html += '<div class="stacks">';
+    html += '<span class="stack you">You: <strong>' + gs.playerStack + '</strong></span>';
+    html += '<span class="pot">Pot: <strong>' + gs.pot + '</strong></span>';
+    html += '<span class="stack bot">Bot: <strong>' + gs.botStack + '</strong></span>';
+    html += '</div>';
+    var dealerLabel = gs.dealerIsPlayer ? 'You' : 'Bot';
+    html += '<div class="round-label">Round ' + gs.roundNum + '/' + NUM_ROUNDS +
+            ' &mdash; ' + STREET_NAMES_G[gs.street] +
+            ' &mdash; Dealer: ' + dealerLabel + '</div>';
+    html += '</div>';
+
+    /* ── Bot hand ── */
+    html += '<div class="cards-section"><h3>Bot\'s Hand</h3><div class="card-row">';
+    html += cardHtml(gs.botHand[0], !revealBot);
+    html += cardHtml(gs.botHand[1], !revealBot);
+    html += '</div></div>';
+
+    /* ── Board ── */
+    var boardShow = revealBot ? 5 : BOARD_COUNTS_G[gs.street];
+    html += '<div class="cards-section"><h3>Board</h3><div class="card-row">';
+    for (var bi = 0; bi < 5; bi++) {
+      html += bi < boardShow ? cardHtml(gs.board[bi], false) : '<div class="card face-down">?</div>';
+    }
+    html += '</div></div>';
+
+    /* ── Player hand ── */
+    html += '<div class="cards-section"><h3>Your Hand</h3><div class="card-row">';
+    html += cardHtml(gs.playerHand[0], false);
+    html += cardHtml(gs.playerHand[1], false);
+    html += '</div></div>';
+
+    /* ── Action log ── */
+    if (gs.log.length > 0) {
+      html += '<div class="action-log">';
+      for (var li = Math.min(gs.log.length - 1, 4); li >= 0; li--) {
+        html += '<div class="log-entry">' + gs.log[li] + '</div>';
+      }
+      html += '</div>';
+    }
+
+    /* ── Showdown result ── */
+    if (showdownInfo) {
+      html += '<div class="showdown-result">';
+      html += 'Your hand: <span class="hand-name">' + handName(showdownInfo.pVal) + '</span>';
+      html += ' &mdash; Bot\'s hand: <span class="hand-name">' + handName(showdownInfo.bVal) + '</span>';
+      html += '</div>';
+    }
+
+    /* ── Action area ── */
+    if (gs.phase === 'betting' && gs.toAct === 'player') {
+      html += buildActionButtons();
+    } else if (gs.phase === 'betting' && gs.toAct === 'bot') {
+      html += '<div class="status-msg">Bot is thinking\u2026</div>';
+    } else if (gs.phase === 'round_end' || gs.phase === 'showdown') {
+      html += '<button class="btn" onclick="nextRound()">Next Round</button>';
+    }
+
+    if (isGameOver) html += buildGameOver();
+
+    area.innerHTML = html;
+  }
+
+  function buildActionButtons() {
+    var myComm = gs.playerCommitted;
+    var oppComm = gs.botCommitted;
+    var toCall = oppComm - myComm;
+    var pot = gs.pot;
+    var myStack = gs.playerStack;
+    var facingBet = toCall > 0;
+    var html = '<div class="action-buttons">';
+
+    if (facingBet) {
+      html += '<button class="btn btn-fold" onclick="playerAction(\'fold\',0)">Fold</button>';
+      var callAmt = Math.min(toCall, myStack);
+      var callLabel = callAmt >= myStack ? 'Call All-in (' + callAmt + ')' : 'Call ' + callAmt;
+      html += '<button class="btn btn-call" onclick="playerAction(\'call\',0)">' + callLabel + '</button>';
+      /* Raise to 2.5× and all-in */
+      var minRaiseTotal = Math.ceil(oppComm * 2.5);
+      var allInRaiseTotal = myComm + myStack;
+      if (allInRaiseTotal > oppComm) {
+        if (minRaiseTotal < allInRaiseTotal) {
+          minRaiseTotal = Math.max(minRaiseTotal, oppComm + 1);
+          html += '<button class="btn btn-raise" onclick="playerAction(\'raise\',' + minRaiseTotal + ')">Raise to ' + minRaiseTotal + '</button>';
+        }
+        html += '<button class="btn btn-allin" onclick="playerAction(\'raise\',' + allInRaiseTotal + ')">All-in ' + allInRaiseTotal + '</button>';
+      }
+      /* Pot odds info */
+      var poDisp = (toCall / (pot + toCall) * 100).toFixed(1);
+      html += '</div>';
+      html += '<div class="pot-odds">Pot odds: call ' + callAmt + ' into ' + pot + ' &mdash; need &ge;' + poDisp + '% equity to call profitably</div>';
+    } else {
+      html += '<button class="btn btn-check" onclick="playerAction(\'check\',0)">Check</button>';
+      var halfPotAmt = Math.max(BIG_BLIND, Math.floor(pot * 0.5));
+      var fullPotAmt = Math.max(BIG_BLIND, pot);
+      var allInAmt = myStack;
+      /* Total commitments for bet buttons */
+      var halfTotal = myComm + halfPotAmt;
+      var fullTotal = myComm + fullPotAmt;
+      var allInTotal = myComm + allInAmt;
+      if (halfPotAmt < myStack) {
+        html += '<button class="btn btn-bet" onclick="playerAction(\'bet\',' + halfTotal + ')">Bet ' + halfPotAmt + ' (&frac12; pot)</button>';
+      }
+      if (fullPotAmt < myStack && fullPotAmt !== halfPotAmt) {
+        html += '<button class="btn btn-bet" onclick="playerAction(\'bet\',' + fullTotal + ')">Bet ' + fullPotAmt + ' (pot)</button>';
+      }
+      if (allInAmt > 0) {
+        html += '<button class="btn btn-allin" onclick="playerAction(\'bet\',' + allInTotal + ')">All-in ' + allInAmt + '</button>';
+      }
+      html += '</div>';
+    }
+
+    return html;
+  }
+
+  function buildGameOver() {
+    var html = '<div class="result-msg final">';
+    if (gs.playerStack <= 0) {
+      html += '<strong>You busted!</strong> The bot wins the match.';
+    } else if (gs.botStack <= 0) {
+      html += '<strong>Bot busted!</strong> You win the match!';
+    } else if (gs.playerStack > gs.botStack) {
+      html += '<strong>Game over \u2014 You win!</strong> ' + gs.playerStack + ' vs ' + gs.botStack + ' chips.';
+    } else if (gs.botStack > gs.playerStack) {
+      html += '<strong>Game over \u2014 Bot wins.</strong> ' + gs.botStack + ' vs ' + gs.playerStack + ' chips.';
+    } else {
+      html += '<strong>Game over \u2014 Dead even!</strong>';
+    }
+    html += '<br><br><button class="btn" onclick="startGame()">Play Again</button>';
+    html += '</div>';
+    return html;
+  }
+
+  /* ===== Window-exposed functions ===== */
+
+  function playerAction(action, totalCommitment) {
+    if (!gs || gs.toAct !== 'player' || gs.phase !== 'betting') return;
+    processAction('player', action, totalCommitment);
   }
 
   function nextRound() {
-    round++;
-    var deck = shuffle(fullDeck());
-    board = deck.slice(0, 5);
-    hero = deck.slice(5, 7);
-    street = 0;
-    renderStreet();
-  }
-
-  function renderStreet() {
-    var area = document.getElementById('game-area');
-    area.innerHTML = '';
-
-    var boardCount = STREET_BOARD_COUNTS[street];
-
-    /* Score bar */
-    var roundInfo = document.createElement('div');
-    roundInfo.className = 'score-bar';
-    var runningAvg = '';
-    if (allErrors.length > 0) {
-      var sum = 0;
-      for (var ei = 0; ei < allErrors.length; ei++) sum += allErrors[ei];
-      runningAvg = '  |  Running avg error: ' + (sum / allErrors.length).toFixed(1) + '%';
-    }
-    roundInfo.textContent = 'Round ' + round + ' of 10 \u2014 ' + STREET_NAMES[street] + runningAvg;
-    area.appendChild(roundInfo);
-
-    /* Board cards */
-    var boardSection = document.createElement('div');
-    boardSection.className = 'cards-section';
-    var boardCardsHtml = '';
-    for (var bi = 0; bi < 5; bi++) {
-      if (bi < boardCount) {
-        boardCardsHtml += '<div class="card ' + cardColor(board[bi]) + '">' + cardName(board[bi]) + '</div>';
-      } else {
-        boardCardsHtml += '<div class="card face-down">?</div>';
-      }
-    }
-    boardSection.innerHTML = '<h3>Board</h3><div class="card-row">' + boardCardsHtml + '</div>';
-    area.appendChild(boardSection);
-
-    /* Hero cards */
-    var heroSection = document.createElement('div');
-    heroSection.className = 'cards-section';
-    var heroCardsHtml = '';
-    for (var hi = 0; hi < hero.length; hi++) {
-      heroCardsHtml += '<div class="card ' + cardColor(hero[hi]) + '">' + cardName(hero[hi]) + '</div>';
-    }
-    heroSection.innerHTML = '<h3>Your Hand</h3><div class="card-row">' + heroCardsHtml + '</div>';
-    area.appendChild(heroSection);
-
-    /* Slider */
-    var sliderSection = document.createElement('div');
-    sliderSection.className = 'slider-section';
-    sliderSection.innerHTML =
-      '<label>Your guess: what % of random opponent hands does your hand beat?</label>' +
-      '<div class="slider-row">' +
-        '<span>0%</span>' +
-        '<input type="range" id="guess-slider" min="0" max="100" value="50">' +
-        '<span>100%</span>' +
-        '<span class="slider-value" id="slider-val">50%</span>' +
-      '</div>';
-    area.appendChild(sliderSection);
-
-    var slider = document.getElementById('guess-slider');
-    var sliderVal = document.getElementById('slider-val');
-    slider.addEventListener('input', function() {
-      sliderVal.textContent = this.value + '%';
-    });
-
-    var btn = document.createElement('button');
-    btn.className = 'btn';
-    btn.textContent = 'Submit Guess';
-    btn.onclick = function() {
-      btn.disabled = true;
-      btn.textContent = 'Computing...';
-      /* Use setTimeout to let the UI update before heavy computation */
-      setTimeout(function() {
-        submitStreetGuess(parseInt(slider.value));
-      }, 50);
-    };
-    area.appendChild(btn);
-  }
-
-  function pct(n, total) {
-    return (n / total * 100).toFixed(1);
-  }
-
-  function submitStreetGuess(guess) {
-    var boardCount = STREET_BOARD_COUNTS[street];
-    var knownBoard = board.slice(0, boardCount);
-    var result = computeStreetEquity(knownBoard, hero);
-    var error = Math.abs(guess - result.equity);
-
-    streetErrors[street].push(error);
-    allErrors.push(error);
-
-    var area = document.getElementById('game-area');
-
-    /* Result + math breakdown */
-    var resultDiv = document.createElement('div');
-    resultDiv.className = 'result-msg round';
-
-    var html = '';
-    if (result.heroHand) {
-      html += 'Current best hand: <span class="hand-name">' + result.heroHand + '</span><br>';
-    }
-    html +=
-      'Your guess: <strong>' + guess + '%</strong> | ' +
-      'Actual equity: <strong>' + result.equity.toFixed(1) + '%</strong> | ' +
-      'Error: <strong>' + error.toFixed(1) + '%</strong>';
-
-    html += '<div class="math-breakdown">';
-    html += '<div class="math-heading">Math breakdown</div>';
-    html += '<div class="math-bars">';
-    html += '<div class="math-bar-row"><span class="bar-label">Win</span>' +
-            '<div class="bar-track"><div class="bar-fill win" style="width:' + pct(result.wins, result.total) + '%"></div></div>' +
-            '<span class="bar-value">' + result.wins.toLocaleString() + ' (' + pct(result.wins, result.total) + '%)</span></div>';
-    html += '<div class="math-bar-row"><span class="bar-label">Tie</span>' +
-            '<div class="bar-track"><div class="bar-fill tie" style="width:' + pct(result.ties, result.total) + '%"></div></div>' +
-            '<span class="bar-value">' + result.ties.toLocaleString() + ' (' + pct(result.ties, result.total) + '%)</span></div>';
-    html += '<div class="math-bar-row"><span class="bar-label">Lose</span>' +
-            '<div class="bar-track"><div class="bar-fill lose" style="width:' + pct(result.losses, result.total) + '%"></div></div>' +
-            '<span class="bar-value">' + result.losses.toLocaleString() + ' (' + pct(result.losses, result.total) + '%)</span></div>';
-    html += '</div>';
-
-    html += '<div class="math-formula">';
-    html += 'Equity = (wins + ties \u00d7 0.5) / total<br>';
-    html += '= (' + result.wins.toLocaleString() + ' + ' + result.ties.toLocaleString() + ' \u00d7 0.5) / ' + result.total.toLocaleString() + '<br>';
-    var numerator = result.wins + result.ties * 0.5;
-    html += '= ' + numerator.toLocaleString() + ' / ' + result.total.toLocaleString() + ' = <strong>' + result.equity.toFixed(1) + '%</strong>';
-    html += '</div>';
-
-    html += '<div class="math-method">' + result.method + '</div>';
-    html += '</div>';
-
-    resultDiv.innerHTML = html;
-    area.appendChild(resultDiv);
-
-    /* Next button */
-    var nextBtn = document.createElement('button');
-    nextBtn.className = 'btn';
-    if (street < 2) {
-      nextBtn.textContent = 'Continue to ' + STREET_NAMES[street + 1];
-      nextBtn.onclick = function() {
-        street++;
-        renderStreet();
-      };
-    } else {
-      /* After turn guess, reveal river */
-      nextBtn.textContent = 'Reveal River';
-      nextBtn.onclick = showRiver;
-    }
-    area.appendChild(nextBtn);
-  }
-
-  function showRiver() {
-    var area = document.getElementById('game-area');
-    area.innerHTML = '';
-
-    /* Score bar */
-    var roundInfo = document.createElement('div');
-    roundInfo.className = 'score-bar';
-    var sum = 0;
-    for (var ei = 0; ei < allErrors.length; ei++) sum += allErrors[ei];
-    roundInfo.textContent = 'Round ' + round + ' of 10 \u2014 River  |  Running avg error: ' + (sum / allErrors.length).toFixed(1) + '%';
-    area.appendChild(roundInfo);
-
-    /* Full board */
-    var boardSection = document.createElement('div');
-    boardSection.className = 'cards-section';
-    var boardCardsHtml = '';
-    for (var bi = 0; bi < 5; bi++) {
-      boardCardsHtml += '<div class="card ' + cardColor(board[bi]) + '">' + cardName(board[bi]) + '</div>';
-    }
-    boardSection.innerHTML = '<h3>Board</h3><div class="card-row">' + boardCardsHtml + '</div>';
-    area.appendChild(boardSection);
-
-    /* Hero cards */
-    var heroSection = document.createElement('div');
-    heroSection.className = 'cards-section';
-    var heroCardsHtml = '';
-    for (var hi = 0; hi < hero.length; hi++) {
-      heroCardsHtml += '<div class="card ' + cardColor(hero[hi]) + '">' + cardName(hero[hi]) + '</div>';
-    }
-    heroSection.innerHTML = '<h3>Your Hand</h3><div class="card-row">' + heroCardsHtml + '</div>';
-    area.appendChild(heroSection);
-
-    /* Compute river equity and show final result */
-    var result = computeEquityRiver(board, hero);
-
-    var resultDiv = document.createElement('div');
-    resultDiv.className = 'result-msg round';
-    var html = 'Final hand: <span class="hand-name">' + result.heroHand + '</span><br>';
-    html += 'River equity: <strong>' + result.equity.toFixed(1) + '%</strong>';
-
-    html += '<div class="math-breakdown">';
-    html += '<div class="math-heading">River math</div>';
-    html += '<div class="math-bars">';
-    html += '<div class="math-bar-row"><span class="bar-label">Win</span>' +
-            '<div class="bar-track"><div class="bar-fill win" style="width:' + pct(result.wins, result.total) + '%"></div></div>' +
-            '<span class="bar-value">' + result.wins.toLocaleString() + ' (' + pct(result.wins, result.total) + '%)</span></div>';
-    html += '<div class="math-bar-row"><span class="bar-label">Tie</span>' +
-            '<div class="bar-track"><div class="bar-fill tie" style="width:' + pct(result.ties, result.total) + '%"></div></div>' +
-            '<span class="bar-value">' + result.ties.toLocaleString() + ' (' + pct(result.ties, result.total) + '%)</span></div>';
-    html += '<div class="math-bar-row"><span class="bar-label">Lose</span>' +
-            '<div class="bar-track"><div class="bar-fill lose" style="width:' + pct(result.losses, result.total) + '%"></div></div>' +
-            '<span class="bar-value">' + result.losses.toLocaleString() + ' (' + pct(result.losses, result.total) + '%)</span></div>';
-    html += '</div>';
-    html += '<div class="math-formula">';
-    html += 'Equity = (' + result.wins.toLocaleString() + ' + ' + result.ties.toLocaleString() + ' \u00d7 0.5) / ' + result.total.toLocaleString();
-    html += ' = <strong>' + result.equity.toFixed(1) + '%</strong>';
-    html += '</div>';
-    html += '<div class="math-method">' + result.method + '</div>';
-    html += '</div>';
-
-    resultDiv.innerHTML = html;
-    area.appendChild(resultDiv);
-
-    if (round < 10) {
-      var nextBtn = document.createElement('button');
-      nextBtn.className = 'btn';
-      nextBtn.textContent = 'Next Round';
-      nextBtn.onclick = nextRound;
-      area.appendChild(nextBtn);
-    } else {
-      showFinalScore();
-    }
-  }
-
-  function showFinalScore() {
-    var area = document.getElementById('game-area');
-
-    var finalDiv = document.createElement('div');
-    finalDiv.className = 'result-msg final';
-
-    var totalSum = 0;
-    for (var i = 0; i < allErrors.length; i++) totalSum += allErrors[i];
-    var avgError = totalSum / allErrors.length;
-
-    var rating;
-    if (avgError < 5) rating = 'Incredible!';
-    else if (avgError < 10) rating = 'Excellent!';
-    else if (avgError < 15) rating = 'Great!';
-    else if (avgError < 20) rating = 'Good';
-    else if (avgError < 30) rating = 'Decent';
-    else rating = 'Keep practicing!';
-
-    var html = '<strong>Game Over!</strong><br>';
-    html += 'Overall average error: <strong>' + avgError.toFixed(1) + '%</strong> \u2014 ' + rating + '<br><br>';
-
-    html += '<div class="final-breakdown">';
-    for (var s = 0; s < 3; s++) {
-      var errs = streetErrors[s];
-      if (errs.length > 0) {
-        var streetSum = 0;
-        for (var j = 0; j < errs.length; j++) streetSum += errs[j];
-        html += STREET_NAMES[s] + ' avg error: <strong>' + (streetSum / errs.length).toFixed(1) + '%</strong><br>';
-      }
-    }
-    html += '</div><br>';
-
-    html += 'Errors by round:<br>';
-    for (var r = 0; r < 10; r++) {
-      var base = r * 3;
-      html += 'R' + (r + 1) + ': ';
-      for (var st = 0; st < 3; st++) {
-        if (base + st < allErrors.length) {
-          if (st > 0) html += ', ';
-          html += STREET_NAMES[st].charAt(0) + ':' + allErrors[base + st].toFixed(1) + '%';
-        }
-      }
-      if (r < 9) html += ' | ';
-    }
-
-    finalDiv.innerHTML = html;
-    area.appendChild(finalDiv);
-
-    var restartBtn = document.createElement('button');
-    restartBtn.className = 'btn';
-    restartBtn.textContent = 'Play Again';
-    restartBtn.onclick = startGame;
-    area.appendChild(restartBtn);
+    if (!gs || (gs.phase !== 'round_end' && gs.phase !== 'showdown')) return;
+    startRound();
   }
 
   /* ===== Exports ===== */
@@ -592,5 +759,7 @@
 
   if (typeof window !== 'undefined') {
     window.startGame = startGame;
+    window.playerAction = playerAction;
+    window.nextRound = nextRound;
   }
 })(typeof module !== 'undefined' && module.exports ? module.exports : {});
