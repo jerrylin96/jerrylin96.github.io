@@ -293,9 +293,12 @@
   }
 
   function startGame() {
+    var stackInput = document.getElementById('start-stack-input');
+    var startingStack = stackInput ? (parseInt(stackInput.value, 10) || STARTING_STACK) : STARTING_STACK;
+    startingStack = Math.max(BIG_BLIND * 2, startingStack); /* must cover at least one blind each */
     gs = {
-      playerStack: STARTING_STACK,
-      botStack: STARTING_STACK,
+      playerStack: startingStack,
+      botStack: startingStack,
       pot: 0,
       playerCommitted: 0,
       botCommitted: 0,
@@ -311,6 +314,7 @@
       bbActor: null,
       bbActedVoluntarily: false,
       prevActionWasCheck: false,
+      lastRaiseSize: BIG_BLIND,
       phase: 'idle',
       log: []
     };
@@ -417,11 +421,13 @@
 
     if (action === 'bet' || action === 'raise') {
       /* betTotal = new total commitment for this actor this street */
+      var prevMax = Math.max(myComm, oppComm); /* track for min-raise size */
       var additional = Math.min(betTotal - myComm, stackOf(actor));
       betTotal = myComm + additional;
       subStack(actor, additional);
       setCommitted(actor, betTotal);
       gs.pot += additional;
+      gs.lastRaiseSize = Math.max(betTotal - prevMax, 1);
       var verb = action === 'bet' ? 'bets ' : 'raises to ';
       addLog(actorLabel(actor) + ' ' + verb + betTotal + '.');
       gs.prevActionWasCheck = false;
@@ -437,6 +443,7 @@
     gs.playerCommitted = 0;
     gs.botCommitted = 0;
     gs.prevActionWasCheck = false;
+    gs.lastRaiseSize = BIG_BLIND;
 
     if (gs.street >= 3) {
       doShowdown();
@@ -664,52 +671,133 @@
     var pot = gs.pot;
     var myStack = gs.playerStack;
     var facingBet = toCall > 0;
-    var html = '<div class="action-buttons">';
+    var html = '';
 
     if (facingBet) {
-      html += '<button class="btn btn-fold" onclick="playerAction(\'fold\',0)">Fold</button>';
+      /* ── Facing a bet: Fold / Call / Raise ── */
       var callAmt = Math.min(toCall, myStack);
+      var allInRaiseTotal = myComm + myStack;
+      /* Min raise = current bet + last raise size */
+      var minRaiseTotal = oppComm + gs.lastRaiseSize;
+      minRaiseTotal = Math.min(minRaiseTotal, allInRaiseTotal);
+
+      html += '<div class="action-buttons">';
+      html += '<button class="btn btn-fold" onclick="playerAction(\'fold\',0)">Fold</button>';
       var callLabel = callAmt >= myStack ? 'Call All-in (' + callAmt + ')' : 'Call ' + callAmt;
       html += '<button class="btn btn-call" onclick="playerAction(\'call\',0)">' + callLabel + '</button>';
-      /* Raise to 2.5× and all-in */
-      var minRaiseTotal = Math.ceil(oppComm * 2.5);
-      var allInRaiseTotal = myComm + myStack;
+      /* Quick raise shortcuts */
+      var quickRaise = Math.min(Math.ceil(oppComm * 2.5), allInRaiseTotal);
+      if (quickRaise >= minRaiseTotal && quickRaise < allInRaiseTotal) {
+        html += '<button class="btn btn-raise" onclick="playerAction(\'raise\',' + quickRaise + ')">Raise to ' + quickRaise + '</button>';
+      }
       if (allInRaiseTotal > oppComm) {
-        if (minRaiseTotal < allInRaiseTotal) {
-          minRaiseTotal = Math.max(minRaiseTotal, oppComm + 1);
-          html += '<button class="btn btn-raise" onclick="playerAction(\'raise\',' + minRaiseTotal + ')">Raise to ' + minRaiseTotal + '</button>';
-        }
         html += '<button class="btn btn-allin" onclick="playerAction(\'raise\',' + allInRaiseTotal + ')">All-in ' + allInRaiseTotal + '</button>';
       }
-      /* Pot odds info */
-      var poDisp = (toCall / (pot + toCall) * 100).toFixed(1);
       html += '</div>';
-      html += '<div class="pot-odds">Pot odds: call ' + callAmt + ' into ' + pot + ' &mdash; need &ge;' + poDisp + '% equity to call profitably</div>';
+
+      /* Custom raise row */
+      if (allInRaiseTotal > oppComm) {
+        html += '<div class="custom-bet-row">';
+        html += '<span class="custom-bet-label">Raise to:</span>';
+        html += '<input type="number" id="custom-bet-input" class="bet-input"' +
+                ' min="' + minRaiseTotal + '" max="' + allInRaiseTotal + '"' +
+                ' value="' + minRaiseTotal + '" step="1"' +
+                ' onkeydown="if(event.key===\'Enter\')playerCustomBet()">';
+        html += '<button class="btn btn-raise" onclick="playerCustomBet()">Raise</button>';
+        html += '<span id="custom-bet-err" class="bet-error"></span>';
+        html += '</div>';
+      }
+
+      var poDisp = (toCall / (pot + toCall) * 100).toFixed(1);
+      html += '<div class="pot-odds">Pot odds: call ' + callAmt + ' into ' + pot +
+              ' &mdash; need &ge;' + poDisp + '% equity to call profitably</div>';
     } else {
-      html += '<button class="btn btn-check" onclick="playerAction(\'check\',0)">Check</button>';
+      /* ── No bet facing: Check / Bet ── */
       var halfPotAmt = Math.max(BIG_BLIND, Math.floor(pot * 0.5));
       var fullPotAmt = Math.max(BIG_BLIND, pot);
-      var allInAmt = myStack;
-      /* Total commitments for bet buttons */
       var halfTotal = myComm + halfPotAmt;
       var fullTotal = myComm + fullPotAmt;
-      var allInTotal = myComm + allInAmt;
+      var allInBetTotal = myComm + myStack;
+
+      html += '<div class="action-buttons">';
+      html += '<button class="btn btn-check" onclick="playerAction(\'check\',0)">Check</button>';
       if (halfPotAmt < myStack) {
         html += '<button class="btn btn-bet" onclick="playerAction(\'bet\',' + halfTotal + ')">Bet ' + halfPotAmt + ' (&frac12; pot)</button>';
       }
       if (fullPotAmt < myStack && fullPotAmt !== halfPotAmt) {
         html += '<button class="btn btn-bet" onclick="playerAction(\'bet\',' + fullTotal + ')">Bet ' + fullPotAmt + ' (pot)</button>';
       }
-      if (allInAmt > 0) {
-        html += '<button class="btn btn-allin" onclick="playerAction(\'bet\',' + allInTotal + ')">All-in ' + allInAmt + '</button>';
+      if (myStack > 0) {
+        html += '<button class="btn btn-allin" onclick="playerAction(\'bet\',' + allInBetTotal + ')">All-in ' + myStack + '</button>';
       }
       html += '</div>';
+
+      /* Custom bet row */
+      if (myStack >= BIG_BLIND) {
+        var defaultBet = Math.min(halfPotAmt, myStack);
+        html += '<div class="custom-bet-row">';
+        html += '<span class="custom-bet-label">Bet:</span>';
+        html += '<input type="number" id="custom-bet-input" class="bet-input"' +
+                ' min="' + BIG_BLIND + '" max="' + myStack + '"' +
+                ' value="' + defaultBet + '" step="1"' +
+                ' onkeydown="if(event.key===\'Enter\')playerCustomBet()">';
+        html += '<button class="btn btn-bet" onclick="playerCustomBet()">Bet</button>';
+        html += '<span id="custom-bet-err" class="bet-error"></span>';
+        html += '</div>';
+      }
     }
 
     return html;
   }
 
+  function playerCustomBet() {
+    if (!gs || gs.toAct !== 'player' || gs.phase !== 'betting') return;
+    var input = document.getElementById('custom-bet-input');
+    var errEl = document.getElementById('custom-bet-err');
+    if (!input) return;
+
+    var val = parseInt(input.value, 10);
+    var myComm = gs.playerCommitted;
+    var oppComm = gs.botCommitted;
+    var toCall = oppComm - myComm;
+    var myStack = gs.playerStack;
+    var facingBet = toCall > 0;
+
+    function showErr(msg) {
+      if (errEl) errEl.textContent = msg;
+      input.classList.add('bet-input-err');
+    }
+    function clearErr() {
+      if (errEl) errEl.textContent = '';
+      input.classList.remove('bet-input-err');
+    }
+
+    if (isNaN(val) || val <= 0) { showErr('Enter a positive number.'); return; }
+
+    if (facingBet) {
+      /* val is the total commitment for the raise */
+      var allInTotal = myComm + myStack;
+      var minRaiseTotal = oppComm + gs.lastRaiseSize;
+      /* Allow raising all-in even if below normal min-raise */
+      if (val < minRaiseTotal && val < allInTotal) {
+        showErr('Min raise to ' + minRaiseTotal + ' (or go all-in for ' + allInTotal + ').');
+        return;
+      }
+      if (val > allInTotal) { showErr('Max is ' + allInTotal + ' (all-in).'); return; }
+      clearErr();
+      playerAction('raise', Math.min(val, allInTotal));
+    } else {
+      /* val is the additional chips to bet */
+      if (val < BIG_BLIND) { showErr('Min bet is ' + BIG_BLIND + '.'); return; }
+      if (val > myStack) { showErr('Max is ' + myStack + ' (all-in).'); return; }
+      clearErr();
+      playerAction('bet', myComm + val);
+    }
+  }
+
   function buildGameOver() {
+    var prevStack = gs.playerStack + gs.botStack; /* total chips = 2 × starting stack */
+    var startingStack = prevStack / 2;
     var html = '<div class="result-msg final">';
     if (gs.playerStack <= 0) {
       html += '<strong>You busted!</strong> The bot wins the match.';
@@ -722,7 +810,14 @@
     } else {
       html += '<strong>Game over \u2014 Dead even!</strong>';
     }
-    html += '<br><br><button class="btn" onclick="startGame()">Play Again</button>';
+    html += '<br><br>';
+    html += '<div class="start-screen" style="display:inline-flex;flex-direction:row;align-items:center;">';
+    html += '<div class="start-option">';
+    html += '<label for="start-stack-input">Starting stack:</label>';
+    html += '<input type="number" id="start-stack-input" value="' + startingStack + '" min="4" max="1000000" step="10">';
+    html += '</div>';
+    html += '<button class="btn" onclick="startGame()" style="margin-top:0;margin-left:8px;">Play Again</button>';
+    html += '</div>';
     html += '</div>';
     return html;
   }
@@ -760,6 +855,7 @@
   if (typeof window !== 'undefined') {
     window.startGame = startGame;
     window.playerAction = playerAction;
+    window.playerCustomBet = playerCustomBet;
     window.nextRound = nextRound;
   }
 })(typeof module !== 'undefined' && module.exports ? module.exports : {});
