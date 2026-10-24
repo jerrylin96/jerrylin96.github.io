@@ -35,7 +35,7 @@
 )
 - Created an end-to-end pipeline for training and testing hundreds of hybrid physics-AI climate models at a time.
 - Core contributor (4th author) to ClimSim, which won the best paper award in the 2023 NeurIPS Datasets and Benchmarks Track.
-- Organized the \$50,000 2024 LEAP ClimSim Kaggle Competition and submitted a paper investigating how the winning deep learning architectures performed when integrated in a climate model.
+- Organized the \$50,000 2024 LEAP ClimSim Kaggle Competition and published a paper investigating how the winning deep learning architectures performed when integrated in a climate model.
 
 #work(
   title: "Data & Analytics Services (DAS) Intern",
@@ -46,7 +46,7 @@
 - Created a machine learning pipeline for predicting wind power output using real-time HRRR forecasts.
 
 == Selected Papers
-- Crowdsourcing the Frontier: Advancing Hybrid Physics-ML Climate Simulation via a \$50,000 Kaggle Competition (1st author, in review at JAMES)
+- #link("https://doi.org/10.1029/2025MS005643")[Crowdsourcing the Frontier: Advancing Hybrid Physics-ML Climate Simulation via a \$50,000 Kaggle Competition] (1st author; published in JAMES, 2026)
 - #link("https://doi.org/10.1017/eds.2026.10056")[Data-driven integration kernels for interpretable nonlocal operator learning] (2nd author; published in Environmental Data Science, 2026)
 - Navigating the Noise: Bringing Clarity to ML Parameterization Design with O(100) Ensembles (1st author, published in JAMES)
 - Stable Machine-Learning Parameterization of Subgrid Processes in a Comprehensive Atmospheric Model Learned From Embedded Convection-Permitting Simulations (4th author, published in JAMES)
