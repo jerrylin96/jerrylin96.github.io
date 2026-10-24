@@ -16,4 +16,4 @@ You can download an up-to-date copy of my resume [here]({{ '/files/resume.pdf' |
 
 non work stuff
 ======
-Outside of immediate research interests, I am broadly interested in the protection of democratic institutions and ways technology can be oriented towards societal progress. I also enjoy running, ebiking, board games, and learning new things. I am active on [Bluesky](https://bsky.app/profile/jlin404.com) and occasionally post on a personal blog at [coupledsystems.leaflet.pub](https://coupledsystems.leaflet.pub/).
+Outside of immediate research interests, I am broadly interested in the protection of democratic institutions and ways technology can be oriented towards societal progress. I also enjoy running, ebiking, sailing, playing board games, and learning new things. Feel free to send me an email at [jlin404@bu.edu](mailto:jlin404@bu.edu) if you'd like to chat! 😊
