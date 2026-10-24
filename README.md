@@ -1,5 +1,46 @@
 A Github Pages template for academic websites. This was forked (then detached) by [Stuart Geiger](https://github.com/staeiou) from the [Minimal Mistakes Jekyll Theme](https://mmistakes.github.io/minimal-mistakes/), which is © 2016 Michael Rose and released under the MIT License. See LICENSE.md.
 
+## Resume
+
+Edit `main.typ`, then build and verify the PDF served at `/files/resume.pdf`:
+
+```sh
+python3 scripts/resume.py build
+python3 scripts/resume.py check
+```
+
+Requirements: Python 3, the exact Typst version in `.typst-version` (currently
+0.15.1), and Poppler (`brew install poppler` on macOS or
+`sudo apt-get install poppler-utils` on Ubuntu). Download the matching compiler
+archive for your platform from [Typst's 0.15.1 release](https://github.com/typst/typst/releases/tag/v0.15.1),
+extract it, and put the executable on `PATH`, or set `TYPST=/path/to/typst` when
+running the commands above. `brew install typst` does not pin this version.
+
+`main.typ` contains the resume content; `resume/template.typ` contains the small
+local layout. Both use native Typst features, with no external packages or fonts
+to download. Once the tools are installed, builds work offline.
+
+The shared script uses only the compiler's embedded fonts, fixes the creation
+timestamp, and rejects all compiler errors and warnings, including unknown fonts.
+It checks that the PDF has one page, contains extractable text, and contains no
+US-style phone number. `check` recompiles into a temporary directory and compares
+the complete PDF bytes, including layout and hyperlink destinations. Comment-only
+edits do not require a changed PDF when they leave the output identical. Commit
+the changed Typst sources and `files/resume.pdf` together when the output changes,
+and inspect the rendered PDF before submitting a resume change.
+
+The homepage and `/cv/` link to this PDF. The HTML CV retains additional academic
+history and its publications list; it is a separate, longer document, so changes
+to facts appearing in both documents should update both. Resume build sources and
+scripts are excluded from Jekyll's published output.
+
+The read-only `Resume` workflow runs on pushes and PRs targeting `jerry` or `main`.
+It validates the artifact without committing files or replacing native GitHub
+Pages deployment. To require validation before publication, configure the Pages
+publishing branch to require PRs and the `Verify resume` check; a failing workflow
+by itself does not block deployment after a direct push. Confirm the Linux CI
+check passes before merging changes produced on another platform.
+
 I think I've got things running smoothly and fixed some major bugs, but feel free to file issues or make pull requests if you want to improve the generic template / theme.
 
 ### Note: if you are using this repo and now get a notification about a security vulnerability, delete the Gemfile.lock file. 
