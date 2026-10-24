@@ -34,6 +34,17 @@ history and its publications list; it is a separate, longer document, so changes
 to facts appearing in both documents should update both. Resume build sources and
 scripts are excluded from Jekyll's published output.
 
+Publication entries without `publication_status` are treated as published. Use
+`publication_status: accepted` for accepted, peer-reviewed contributions and
+`publication_status: under_review` for preprints still in review. Both the
+publications page and HTML CV show accepted work first, then work under review,
+then published entries in reverse date order. Within the first two groups,
+entries are ordered by title. Use `publication_year` when only the year is known;
+omit `date` rather than inventing an acceptance or publication day. Year-only
+entries do not emit an inferred publication date in page metadata. Add `paperurl`
+and `link` only when a public manuscript is available, and keep the status in the
+`citation` text consistent with the entry's metadata. Summaries are optional.
+
 The read-only `Resume` workflow runs on pushes and PRs targeting `jerry` or `main`.
 It validates the artifact without committing files or replacing native GitHub
 Pages deployment. To require validation before publication, configure the Pages

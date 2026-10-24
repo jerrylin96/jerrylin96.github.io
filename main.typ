@@ -46,14 +46,14 @@
 - Created a machine learning pipeline for predicting wind power output using real-time HRRR forecasts.
 
 == Selected Papers
+- Run It Back: Autoregression vs. Video Diffusion for End-Conditioned Weather Trajectories (1st author; accepted, NeurIPS 2026 Climate Change AI Workshop)
+- Signoff: Bringing Human Accountability Back to Agent-Powered Research (1st author; accepted, BayLearn 2026; peer reviewed)
+- #link("https://arxiv.org/abs/2608.19008")[Extremes on Rewind: Generating 1,000-Member Ensembles Initialized at a Final Condition] (1st author; preprint, under review, 2026)
 - #link("https://doi.org/10.1029/2025MS005643")[Crowdsourcing the Frontier: Advancing Hybrid Physics-ML Climate Simulation via a \$50,000 Kaggle Competition] (1st author; published in JAMES, 2026)
 - #link("https://doi.org/10.1017/eds.2026.10056")[Data-driven integration kernels for interpretable nonlocal operator learning] (2nd author; published in Environmental Data Science, 2026)
 - Navigating the Noise: Bringing Clarity to ML Parameterization Design with O(100) Ensembles (1st author, published in JAMES)
-- Stable Machine-Learning Parameterization of Subgrid Processes in a Comprehensive Atmospheric Model Learned From Embedded Convection-Permitting Simulations (4th author, published in JAMES)
-- ClimSim-Online: A Large Multi-scale Dataset and Framework for Hybrid ML-physics Climate Emulation (6th author, published in Journal of Machine Learning Research)
 - ClimSim: A large multi-scale dataset for hybrid physics-ML climate emulation (4th author, Best Paper in 2023 NeurIPS Datasets and Benchmarks Track)
 - Stress-testing the coupled behavior of hybrid physics-machine learning climate simulations on an unseen, warmer climate (1st author, accepted in 2023 NeurIPS Climate Change AI Workshop)
-- Climate-invariant Machine Learning (6th author, accepted in Science Advances)
 
 == Education
 

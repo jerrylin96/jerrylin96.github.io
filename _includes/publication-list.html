@@ -1,0 +1,11 @@
+{% assign accepted = site.publications | where: "publication_status", "accepted" | sort: "title" %}
+{% assign under_review = site.publications | where: "publication_status", "under_review" | sort: "title" %}
+{% assign published = site.publications | where_exp: "paper", "paper.publication_status == nil" | sort: "date" | reverse %}
+{% assign papers = accepted | concat: under_review | concat: published %}
+{% for post in papers %}
+  {% if include.cv %}
+    {% include archive-single-cv.html %}
+  {% else %}
+    {% include archive-single.html %}
+  {% endif %}
+{% endfor %}
