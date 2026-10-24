@@ -141,8 +141,11 @@ exclude:
   - config
   - gulpfile.js
   - log
+  - main.typ
   - node_modules
   - package.json
+  - resume
+  - scripts
   - tmp
   - vendor
 keep_files:

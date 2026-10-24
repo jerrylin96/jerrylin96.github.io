@@ -9,6 +9,8 @@ redirect_from:
 
 {% include base_path %}
 
+You can [download my one-page resume as a PDF]({{ '/files/resume.pdf' | relative_url }}). My fuller CV is below.
+
 Education
 ======
 * B.A. in Applied Mathematics, University of California, Berkeley, 2018
@@ -17,7 +19,7 @@ Education
 
 Work experience
 ======
-* Postdoctoral Researcher at Boston University
+* Postdoctoral Researcher at Boston University (Sep 2025 - Present)
   * Working with Libby Barnes on a new project.
 
 * Graduate Research Assistant @ Computational Clouds and Climate Lab (Sep 2020 - July 2025)

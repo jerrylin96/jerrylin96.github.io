@@ -1,0 +1,32 @@
+name: Resume
+
+# Always produce a check, including for PRs that only change website content.
+on:
+  push:
+    branches: [jerry, main]
+  pull_request:
+    branches: [jerry, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resume:
+    name: Verify resume
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Read compiler version
+        id: typst
+        run: echo "version=$(cat .typst-version)" >> "$GITHUB_OUTPUT"
+      - uses: typst-community/setup-typst@v5
+        with:
+          typst-version: ${{ steps.typst.outputs.version }}
+      - name: Install PDF inspection tools
+        run: sudo apt-get update && sudo apt-get install --yes poppler-utils
+      - name: Verify compilation and committed PDF
+        run: python3 scripts/resume.py check
