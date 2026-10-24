@@ -11,8 +11,6 @@ citation: >-
   and Beucler, T. (2026). Data-driven integration kernels for interpretable
   nonlocal operator learning. <i>Environmental Data Science</i>, 5, e31.
 ---
-This paper introduces learned integration kernels that make nonlocal influences across space, height, and time interpretable before a local nonlinear prediction step.
-
 Published as part of the Climate Informatics 2026 proceedings, following the conference's peer-review process.
 
 [Conference program](https://wp.unil.ch/ci26/tentative-schedule/)
