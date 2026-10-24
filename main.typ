@@ -47,7 +47,7 @@
 
 == Selected Papers
 - Crowdsourcing the Frontier: Advancing Hybrid Physics-ML Climate Simulation via a \$50,000 Kaggle Competition (1st author, in review at JAMES)
-- Data-Driven Integration Kernels for Interpretable Nonlocal Operator Learning (2nd author, accepted in Climate Informatics)
+- #link("https://doi.org/10.1017/eds.2026.10056")[Data-driven integration kernels for interpretable nonlocal operator learning] (2nd author; published in Environmental Data Science, 2026)
 - Navigating the Noise: Bringing Clarity to ML Parameterization Design with O(100) Ensembles (1st author, published in JAMES)
 - Stable Machine-Learning Parameterization of Subgrid Processes in a Comprehensive Atmospheric Model Learned From Embedded Convection-Permitting Simulations (4th author, published in JAMES)
 - ClimSim-Online: A Large Multi-scale Dataset and Framework for Hybrid ML-physics Climate Emulation (6th author, published in Journal of Machine Learning Research)
