@@ -1,0 +1,6 @@
+# Use after _config.yml for local builds and previews.
+url: "http://127.0.0.1:4001"
+baseurl: ""
+host: "127.0.0.1"
+port: 4001
+force_polling: true
