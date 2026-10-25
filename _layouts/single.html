@@ -56,7 +56,13 @@ layout: default
 
       <section class="page__content" itemprop="text">
         {{ content }}
-        {% if page.link %}<div><a href="{{ page.link }}" class="btn">{{ site.data.ui-text[site.locale].ext_link_label | default: "Direct Link" }}</a></div>{% endif %}
+        {% assign external_link = page.link %}
+        {% if page.collection == 'publications' %}
+          {% assign external_link = external_link | default: page.paperurl %}
+        {% endif %}
+        {% if external_link %}
+          <div><a href="{{ external_link }}" class="btn">{% if page.collection == 'publications' %}Read paper{% else %}{{ site.data.ui-text[site.locale].ext_link_label | default: "Direct Link" }}{% endif %}</a></div>
+        {% endif %}
       </section>
 
       <footer class="page__meta">

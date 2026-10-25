@@ -41,9 +41,13 @@ publications page and HTML CV show accepted work first, then work under review,
 then published entries in reverse date order. Within the first two groups,
 entries are ordered by title. Use `publication_year` when only the year is known;
 omit `date` rather than inventing an acceptance or publication day. Year-only
-entries do not emit an inferred publication date in page metadata. Add `paperurl`
-and `link` only when a public manuscript is available, and keep the status in the
-`citation` text consistent with the entry's metadata. Summaries are optional.
+entries do not emit an inferred publication date in page metadata. Set `paperurl`
+when a public manuscript is available. Publication titles and "Read paper"
+buttons use that URL unless an explicit `link` overrides it. Keep the status in
+the `citation` text consistent with the entry's metadata. Summaries are optional.
+Verify a paper URL against the title and authors on a publisher, proceedings, or
+preprint record, or use a URL supplied by the author. Leave unavailable manuscript
+links unset; never invent URLs or use placeholders.
 
 The read-only `Resume` workflow runs on pushes and PRs targeting `jerry` or `main`.
 It validates the artifact without committing files or replacing native GitHub
