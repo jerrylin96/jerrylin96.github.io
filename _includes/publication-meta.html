@@ -1,0 +1,12 @@
+{%- assign paper = include.paper -%}
+{%- assign year = paper.publication_year -%}
+{%- unless year -%}
+  {%- assign year = paper.date | date: "%Y" -%}
+{%- endunless -%}
+{%- if paper.publication_status == 'accepted' -%}
+  Accepted (peer reviewed), <i>{{ paper.venue }}</i>, {{ year }}
+{%- elsif paper.publication_status == 'under_review' -%}
+  Under review · Preprint, <i>{{ paper.venue }}</i>, {{ year }}
+{%- else -%}
+  Published in <i>{{ paper.venue }}</i>, {{ year }}
+{%- endif -%}
