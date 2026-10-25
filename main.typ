@@ -23,7 +23,7 @@
 - #link("https://doi.org/10.1029/2024MS004551")[Navigating the Noise: Bringing Clarity to ML Parameterization Design with O(100) Ensembles] (1st author, published in JAMES)
 - #link("https://doi.org/10.1029/2024MS004618")[Stable Machine-Learning Parameterization of Subgrid Processes in a Comprehensive Atmospheric Model Learned From Embedded Convection-Permitting Simulations] (4th author, published in JAMES)
 - #link("https://jmlr.org/papers/v26/24-1014.html")[ClimSim-Online: A Large Multi-scale Dataset and Framework for Hybrid ML-physics Climate Emulation] (6th author, published in Journal of Machine Learning Research)
-- #link("https://openreview.net/pdf?id=W5If9P1xqO")[ClimSim: A large multi-scale dataset for hybrid physics-ML climate emulation] (4th author, Best Paper in 2023 NeurIPS Datasets and Benchmarks Track)
+- #link("https://proceedings.neurips.cc/paper/2023/hash/45fbcc01349292f5e059a0b8b02c8c3f-Abstract-Datasets_and_Benchmarks.html")[ClimSim: A large multi-scale dataset for hybrid physics-ML climate emulation] (4th author, Best Paper in 2023 NeurIPS Datasets and Benchmarks Track)
 - #link("https://doi.org/10.1126/sciadv.adj7250")[Climate-invariant Machine Learning] (6th author, published in Science Advances)
 - #link("https://www.climatechange.ai/papers/neurips2023/62")[Stress-testing the coupled behavior of hybrid physics-machine learning climate simulations on an unseen, warmer climate] (1st author, accepted in 2023 NeurIPS Climate Change AI Workshop)
 

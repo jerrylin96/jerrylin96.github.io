@@ -3,7 +3,7 @@ title: "ClimSim: A large multi-scale dataset for hybrid physics-ML climate emula
 
 collection: publications
 permalink: /publication/ClimSim
-paperurl: 'https://openreview.net/pdf?id=W5If9P1xqO'
+paperurl: 'https://proceedings.neurips.cc/paper/2023/hash/45fbcc01349292f5e059a0b8b02c8c3f-Abstract-Datasets_and_Benchmarks.html'
 date: 2023-09-25
 venue: 'NeurIPS 2023 Datasets and Benchmarks Track'
 ---

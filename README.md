@@ -45,6 +45,9 @@ entries do not emit an inferred publication date in page metadata. Set `paperurl
 when a public manuscript is available. Publication titles and "Read paper"
 buttons use that URL unless an explicit `link` overrides it. Keep the status in
 the `citation` text consistent with the entry's metadata. Summaries are optional.
+Verify a paper URL against the title and authors on a publisher, proceedings, or
+preprint record, or use a URL supplied by the author. Leave unavailable manuscript
+links unset; never invent URLs or use placeholders.
 
 The read-only `Resume` workflow runs on pushes and PRs targeting `jerry` or `main`.
 It validates the artifact without committing files or replacing native GitHub
