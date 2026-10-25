@@ -5,10 +5,10 @@
   set page(paper: "us-letter", margin: 0.5in)
   set text(font: "Libertinus Serif", size: 11pt, lang: "en", ligatures: false)
   set par(leading: 0.65em, spacing: 0.65em)
-  set list(indent: 0.8em, body-indent: 0.45em, tight: false, spacing: 4pt)
+  set list(indent: 0.8em, body-indent: 0.45em, tight: false, spacing: 5pt)
   show link: set text(fill: accent)
   show heading.where(level: 2): it => block(
-    width: 100%, above: 12pt, below: 6pt,
+    width: 100%, above: 14pt, below: 6pt,
     stack(
       dir: ttb, spacing: 3pt,
       text(size: 11pt, weight: "bold", fill: accent, it.body),
