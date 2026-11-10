@@ -1,10 +1,11 @@
-# main links links
+# Main navigation. A link with a `section` belongs to that collection: it is
+# hidden while the collection is empty and marked current on its pages.
 main:
-
   - title: "Publications"
     url: /publications/
-        
+    section: publications
+  - title: "Writing"
+    url: /writing/
+    section: posts
   - title: "CV"
     url: /cv/
-
-

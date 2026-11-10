@@ -1,24 +1,20 @@
 ---
-layout: archive
 title: "CV"
 permalink: /cv/
-author_profile: true
 redirect_from:
   - /resume
 ---
 
-{% include base_path %}
-
 You can [download my one-page resume as a PDF]({{ '/files/resume.pdf' | relative_url }}). My fuller CV is below.
 
 Education
-======
+------
 * B.A. in Applied Mathematics, University of California, Berkeley, 2018
 * M.S. in Earth System Science, University of California, Irvine, 2022
 * Ph.D in Earth System Science, University of California, Irvine, 2025
 
 Work experience
-======
+------
 * Postdoctoral Researcher at Boston University (Sep 2025 - Present)
   * Working with Libby Barnes on a new project.
 
@@ -41,11 +37,11 @@ Work experience
   * Created a database of lawyers and law firms specializing in disability insurance with web scraping tools created in R
 
 Publications
-======
-  <ul>{% include publication-list.html cv=true %}</ul>
+------
+{% include publication-list.html style="cv" %}
   
 Teaching
-======
+------
 - ESS 118: Programming for Environmental Science (Spring 2023 TA)
 - ESS 116: Introduction to Data Analysis (Fall 2022 TA)
 - ESS 17: Catastrophes (Spring 2022 TA)
@@ -53,7 +49,7 @@ Teaching
 
   
 Service and leadership
-=======
+-------
 - Ran a [$50,000 Kaggle competition](https://www.kaggle.com/competitions/leap-atmospheric-physics-ai-climsim) on the ClimSim dataset
 - Co-organized a [Machine Learning for Earth System Modeling (ML4ESM) Workshop](https://leap-stc.github.io/ml4esm-workshop/) at ICML in 2024
 - Core contributor and maintainer to ClimSim's GitHub repo (May 2023 - Present)
@@ -62,9 +58,9 @@ Service and leadership
 - Managed a student-run data science course for the Data Science Society at UC Berkeley from Aug 2017 to Dec 2018.
 
 Awards
-=======
+-------
 - Excellence in Leadership Award (Earth System Science Department 2023)
 
 Other
-=======
+-------
 Was briefly interested in devising a voting strategy that took the best parts of plurality and approval voting and generalized them as a "First Choice Weighted Approval Voting System," and I wrote a preprint of the work with my good friend Peter Butler, which can be found [here](https://www.researchgate.net/publication/341816279_Evaluating_the_Properties_of_a_First_Choice_Weighted_Approval_Voting_System#fullTextFileContent).

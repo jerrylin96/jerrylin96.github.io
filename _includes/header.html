@@ -1,0 +1,20 @@
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="site-title" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+    <nav aria-label="Main">
+      <ul class="site-nav">
+        {%- for link in site.data.navigation.main -%}
+          {%- comment -%}
+            A link with a `section` names a collection: it is hidden while the
+            collection is empty and marked current on the collection's pages.
+          {%- endcomment -%}
+          {%- if link.section and site[link.section].size == 0 -%}{%- continue -%}{%- endif -%}
+          {%- assign current = false -%}
+          {%- if page.url == link.url -%}{%- assign current = true -%}{%- endif -%}
+          {%- if link.section and page.collection == link.section -%}{%- assign current = true -%}{%- endif %}
+        <li><a href="{{ link.url | relative_url }}"{% if current %} aria-current="page"{% endif %}>{{ link.title }}</a></li>
+        {%- endfor %}
+      </ul>
+    </nav>
+  </div>
+</header>

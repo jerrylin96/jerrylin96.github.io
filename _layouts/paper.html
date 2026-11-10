@@ -1,0 +1,39 @@
+---
+layout: default
+---
+{%- assign external = page.link | default: page.paperurl %}
+<article>
+  <p class="breadcrumb"><a href="{{ '/publications/' | relative_url }}">Publications</a></p>
+  <h1>{{ page.title | markdownify | remove: "<p>" | remove: "</p>" | strip }}</h1>
+  <p class="paper__meta">{% include publication-meta.html paper=page %}</p>
+  {%- if external %}
+  <p class="actions"><a class="button" href="{{ external }}">Read paper</a></p>
+  {%- endif %}
+
+  <div class="prose">
+    {{ content }}
+  </div>
+
+  {%- if page.citation %}
+  <section class="cite" aria-labelledby="cite-heading">
+    <h2 id="cite-heading">Recommended citation</h2>
+    <p id="citation">{{ page.citation }}{% if page.paperurl %} <a href="{{ page.paperurl }}">{{ page.paperurl }}</a>{% endif %}</p>
+    <button type="button" class="button button--quiet" data-copy="citation" hidden>Copy citation</button>
+  </section>
+  <script>
+    // Progressive enhancement: the button appears only where copying works.
+    document.querySelectorAll("[data-copy]").forEach(function (button) {
+      if (!navigator.clipboard) return;
+      var label = button.textContent;
+      button.hidden = false;
+      button.addEventListener("click", function () {
+        var text = document.getElementById(button.dataset.copy).innerText.trim();
+        navigator.clipboard.writeText(text).then(function () {
+          button.textContent = "Copied";
+          setTimeout(function () { button.textContent = label; }, 2000);
+        });
+      });
+    });
+  </script>
+  {%- endif %}
+</article>
