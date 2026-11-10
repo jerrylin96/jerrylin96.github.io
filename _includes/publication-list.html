@@ -1,11 +1,24 @@
-{% assign accepted = site.publications | where: "publication_status", "accepted" | sort: "title" %}
-{% assign under_review = site.publications | where: "publication_status", "under_review" | sort: "title" %}
-{% assign published = site.publications | where_exp: "paper", "paper.publication_status == nil" | sort: "date" | reverse %}
-{% assign papers = accepted | concat: under_review | concat: published %}
-{% for post in papers %}
-  {% if include.cv %}
-    {% include archive-single-cv.html %}
-  {% else %}
-    {% include archive-single.html %}
-  {% endif %}
-{% endfor %}
+{%- comment -%}
+  Papers in the order README.md describes: accepted, then under review (each
+  sorted by title), then published, newest first.
+    style: "full" (default), "compact" (title and venue), or "cv" (citation)
+    limit: show only the first N papers
+    heading: element for paper titles (default h3; use h2 directly under the page title)
+{%- endcomment -%}
+{%- comment -%}
+  Jekyll keeps future-dated papers in site.publications but does not build
+  their pages (future: false), so leave them out until their date, as
+  standard-site.json does.
+{%- endcomment -%}
+{%- assign current = site.publications | where_exp: "paper", "paper.date <= site.time" -%}
+{%- assign accepted = current | where: "publication_status", "accepted" | sort: "title" -%}
+{%- assign under_review = current | where: "publication_status", "under_review" | sort: "title" -%}
+{%- assign published = current | where_exp: "paper", "paper.publication_status == nil" | sort: "date" | reverse -%}
+{%- assign papers = accepted | concat: under_review | concat: published -%}
+{%- assign style = include.style | default: "full" -%}
+{%- assign limit = include.limit | default: papers.size %}
+<ol class="papers papers--{{ style }}">
+  {%- for paper in papers limit: limit %}
+  {%- include paper-item.html paper=paper style=style heading=include.heading %}
+  {%- endfor %}
+</ol>

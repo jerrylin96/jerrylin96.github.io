@@ -1,0 +1,21 @@
+{%- assign author = site.author -%}
+<ul class="links">
+  {%- if include.resume %}
+  <li><a href="{{ '/files/resume.pdf' | relative_url }}">Resume (PDF)</a></li>
+  {%- endif -%}
+  {%- if author.googlescholar %}
+  <li><a rel="me" href="{{ author.googlescholar }}">Google Scholar</a></li>
+  {%- endif -%}
+  {%- if author.orcid %}
+  <li><a rel="me" href="{{ author.orcid }}">ORCID</a></li>
+  {%- endif -%}
+  {%- if author.github %}
+  <li><a rel="me" href="https://github.com/{{ author.github }}">GitHub</a></li>
+  {%- endif -%}
+  {%- if author.bluesky %}
+  <li><a rel="me" href="https://bsky.app/profile/{{ author.bluesky }}">Bluesky</a></li>
+  {%- endif -%}
+  {%- if author.researchgate %}
+  <li><a rel="me" href="{{ author.researchgate }}">ResearchGate</a></li>
+  {%- endif %}
+</ul>

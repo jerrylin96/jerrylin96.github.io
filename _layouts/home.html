@@ -1,0 +1,36 @@
+---
+layout: default
+---
+{%- assign author = site.author %}
+<header class="intro">
+  <img class="intro__photo" src="{{ author.avatar | relative_url }}" alt="Photo of {{ author.name }}" width="128" height="128">
+  <div>
+    <h1 class="intro__name">{{ author.name }}</h1>
+    <p class="intro__bio">{{ author.bio }}{% if author.location %} · {{ author.location }}{% endif %}</p>
+    {% include profile-links.html resume=true %}
+  </div>
+</header>
+
+<section class="prose">
+  {%- if page.title %}
+  <h2>{{ page.title }}</h2>
+  {%- endif %}
+  {{ content }}
+</section>
+
+{%- assign current_papers = site.publications | where_exp: "paper", "paper.date <= site.time" -%}
+{%- if current_papers.size > 0 %}
+<section class="recent">
+  <h2>Recent publications</h2>
+  {% include publication-list.html style="compact" limit=4 %}
+  <p class="more"><a href="{{ '/publications/' | relative_url }}">All publications</a></p>
+</section>
+{%- endif %}
+
+{%- if site.posts.size > 0 %}
+<section class="recent">
+  <h2>Recent writing</h2>
+  {% include post-list.html limit=3 %}
+  <p class="more"><a href="{{ '/writing/' | relative_url }}">All writing</a></p>
+</section>
+{%- endif %}

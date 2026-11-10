@@ -6,5 +6,6 @@ permalink: /publication/stable-ml-parameterization
 paperurl: 'https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2024MS004618?af=R'
 date: 2025-07-10
 venue: 'Journal of Advances in Modeling Earth Systems (JAMES)'
+standard_site_rkey: 3mzwnrqmub4uk
 ---
 Building off ClimSim, this paper is the first to yield a stable and accurate machine-learning parameterization of subgrid processes (including explicit cloud condensate coupling) in a comprehensive atmospheric model learned from embedded convection-permitting simulations.

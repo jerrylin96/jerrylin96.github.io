@@ -9,4 +9,5 @@ citation: >-
   Lin, J., and Barnes, E. A. (2026). Signoff: Bringing Human Accountability
   Back to Agent-Powered Research. <i>Bay Area Machine Learning Symposium
   (BayLearn)</i>. Accepted symposium paper, peer reviewed.
+standard_site_rkey: 3mzwnrqmtteuk
 ---

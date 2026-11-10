@@ -12,6 +12,7 @@ citation: >-
   et al. (2026). Crowdsourcing the frontier: Advancing hybrid physics-ML
   climate simulation via a $50,000 Kaggle competition.
   <i>Journal of Advances in Modeling Earth Systems</i>, 18, e2025MS005643.
+standard_site_rkey: 3mzwnrqmsrvuk
 ---
 This paper takes ideas from the winning teams of the 2024 LEAP ClimSim Kaggle competition and systematically tests them offline and online to reveal SOTA performance, universal failure modes, and architecture-dependent idiosyncracies. 
 

@@ -1,0 +1,18 @@
+{%- comment -%}
+  Posts, newest first. limit: show only the first N. heading: element for
+  titles (default h3; use h2 directly under the page title).
+{%- endcomment -%}
+{%- assign limit = include.limit | default: site.posts.size -%}
+{%- assign heading = include.heading | default: "h3" %}
+<ol class="posts">
+  {%- for post in site.posts limit: limit %}
+  {%- capture summary -%}{{ post.description | default: post.excerpt | strip_html | strip }}{%- endcapture %}
+  <li class="post-item">
+    <{{ heading }} class="post-item__title"><a href="{{ post.url | relative_url }}">{{ post.title | markdownify | remove: "<p>" | remove: "</p>" | strip }}</a></{{ heading }}>
+    <p class="post-item__date"><time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %-d, %Y" }}</time></p>
+    {%- if summary != "" %}
+    <p class="post-item__summary">{{ summary | truncatewords: 40 }}</p>
+    {%- endif %}
+  </li>
+  {%- endfor %}
+</ol>

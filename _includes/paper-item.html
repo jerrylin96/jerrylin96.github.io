@@ -1,0 +1,33 @@
+{%- comment -%}
+  One paper in a list. The title links to the paper itself when it has a
+  public URL (link, else paperurl), and to its page on this site otherwise.
+{%- endcomment -%}
+{%- assign paper = include.paper -%}
+{%- assign heading = include.heading | default: "h3" -%}
+{%- assign title = paper.title | markdownify | remove: "<p>" | remove: "</p>" | strip -%}
+{%- assign external = paper.link | default: paper.paperurl -%}
+{%- if external -%}
+  {%- assign title_url = external -%}
+{%- else -%}
+  {%- assign title_url = paper.url | relative_url -%}
+{%- endif -%}
+{%- capture summary -%}{{ paper.excerpt | strip_html | strip }}{%- endcapture %}
+<li class="paper">
+  <{{ heading }} class="paper__title"><a href="{{ title_url }}">{{ title }}</a></{{ heading }}>
+  {%- if include.style == "cv" and paper.citation %}
+  <p class="paper__citation">{{ paper.citation }}</p>
+  {%- else %}
+  <p class="paper__meta">{% include publication-meta.html paper=paper %}</p>
+  {%- endif -%}
+  {%- if include.style == "full" -%}
+    {%- if summary != "" %}
+  <p class="paper__summary">{{ summary }}</p>
+    {%- endif -%}
+    {%- if paper.citation %}
+  <p class="paper__citation">{{ paper.citation }}</p>
+    {%- endif -%}
+  {%- endif -%}
+  {%- if include.style == "full" and external %}
+  <p class="paper__links"><a href="{{ paper.url | relative_url }}">Details<span class="visually-hidden"> about {{ title | strip_html }}</span></a></p>
+  {%- endif %}
+</li>

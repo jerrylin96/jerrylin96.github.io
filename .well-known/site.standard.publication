@@ -1,0 +1,6 @@
+---
+layout: null
+permalink: /.well-known/site.standard.publication
+sitemap: false
+---
+at://{{ site.standard_site.did }}/site.standard.publication/{{ site.standard_site.publication }}

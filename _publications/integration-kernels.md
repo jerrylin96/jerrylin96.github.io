@@ -10,6 +10,7 @@ citation: >-
   Ferretti, S. L., Lin, J., Shamekh, S., Baldwin, J. W., Pritchard, M. S.,
   and Beucler, T. (2026). Data-driven integration kernels for interpretable
   nonlocal operator learning. <i>Environmental Data Science</i>, 5, e31.
+standard_site_rkey: 3mzwnrqmtdruk
 ---
 Published as part of the Climate Informatics 2026 proceedings, following the conference's peer-review process.
 

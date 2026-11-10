@@ -1,0 +1,92 @@
+---
+layout: null
+permalink: /standard-site.json
+sitemap: false
+---
+{%- comment -%}
+  The Standard.site records this site declares. scripts/standard_site.py checks
+  this file against the lexicons and the built pages, then writes the records
+  to the PDS. Fields that render as null or "" are left out of the records.
+  A document's title, description and textContent are rendered HTML here; the
+  script turns them into plain text with an HTML parser, because strip_html
+  deletes text between any "<" and ">".
+{%- endcomment -%}
+{%- assign ss = site.standard_site -%}
+{%- assign publication_uri = "at://" | append: ss.did | append: "/site.standard.publication/" | append: ss.publication -%}
+{%- assign docs = "" | split: "" -%}
+{%- for collection in site.collections -%}
+  {%- if ss.collections contains collection.label -%}
+    {%- assign docs = docs | concat: collection.docs -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- comment -%} Like their pages, documents dated in the future wait for their date. {%- endcomment -%}
+{%- assign docs = docs | where_exp: "doc", "doc.date <= site.time" -%}
+{%- assign assigned = docs | where_exp: "doc", "doc.standard_site_rkey" -%}
+{%- assign missing = docs | where_exp: "doc", "doc.standard_site_rkey == nil" -%}
+{
+  "did": {{ ss.did | jsonify }},
+  "buildTime": {{ site.time | date_to_xmlschema | jsonify }},
+  "publication": {
+    "rkey": {{ ss.publication | jsonify }},
+    "icon": {{ ss.icon | jsonify }},
+    "record": {
+      "$type": "site.standard.publication",
+      "url": {{ site.url | append: site.baseurl | jsonify }},
+      "name": {{ ss.name | default: site.title | jsonify }},
+      "description": {{ ss.description | default: site.description | jsonify }},
+      {%- if ss.theme %}
+      {%- comment -%} Lexicon property name : _config.yml key {%- endcomment -%}
+      {%- assign roles = "background:background,foreground:foreground,accent:accent,accentForeground:accent_foreground" | split: "," %}
+      "basicTheme": {
+        "$type": "site.standard.theme.basic"
+        {%- for role in roles -%}
+          {%- assign names = role | split: ":" -%}
+          {%- assign key = names[1] -%}
+          {%- assign color = ss.theme[key] -%},
+        {{ names[0] | jsonify }}: {"$type": "site.standard.theme.color#rgb", "r": {{ color[0] | jsonify }}, "g": {{ color[1] | jsonify }}, "b": {{ color[2] | jsonify }}}
+        {%- endfor %}
+      },
+      {%- endif %}
+      "preferences": {"showInDiscover": {{ ss.show_in_discover | jsonify }}}
+    }
+  },
+  "documents": [
+    {%- for doc in assigned %}
+    {%- capture excerpt_text -%}{{ doc.excerpt | strip_html | strip }}{%- endcapture -%}
+    {%- if doc.description -%}
+      {%- assign description = doc.description | markdownify -%}
+    {%- elsif excerpt_text != "" -%}
+      {%- capture description -%}{{ doc.excerpt }}{%- endcapture -%}
+    {%- elsif doc.citation -%}
+      {%- assign description = doc.citation | markdownify -%}
+    {%- else -%}
+      {%- assign description = "" -%}
+    {%- endif -%}
+    {%- capture text -%}
+      {%- if doc.collection == "publications" and doc.venue -%}
+        <p>{% include publication-meta.html paper=doc %}</p>
+      {%- endif -%}
+      {{ doc.content }}
+      {%- if doc.citation -%}
+        <p>Recommended citation: {{ doc.citation }}</p>
+      {%- endif -%}
+    {%- endcapture %}
+    {
+      "rkey": {{ doc.standard_site_rkey | jsonify }},
+      "source": {{ doc.relative_path | jsonify }},
+      "date": {{ doc.date | date_to_xmlschema | jsonify }},
+      "publicationYear": {{ doc.publication_year | jsonify }},
+      "record": {
+        "$type": "site.standard.document",
+        "site": {{ publication_uri | jsonify }},
+        "path": {{ site.baseurl | append: doc.url | jsonify }},
+        "title": {{ doc.title | markdownify | jsonify }},
+        "description": {{ description | jsonify }},
+        "textContent": {{ text | jsonify }},
+        "tags": {{ doc.tags | jsonify }}
+      }
+    }{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  ],
+  "missing": [{% for doc in missing %}{{ doc.relative_path | jsonify }}{% unless forloop.last %}, {% endunless %}{% endfor %}]
+}
