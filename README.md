@@ -11,10 +11,18 @@ that Standard.site readers and search indexes can find and verify.
 | `_publications/` | One file per paper |
 | `_posts/` | Blog posts (create the folder with the first post) |
 | `_layouts/`, `_includes/` | Page templates |
+| `_data/navigation.yml` | The navigation tabs |
 | `assets/css/main.css` | The only stylesheet |
+| `images/` | The photo and the avatar and icons cropped from it |
 | `_config.yml` | Site settings, author links, and Standard.site settings |
 | `scripts/standard_site.py` | Checks and publishes the Standard.site records |
 | `main.typ`, `resume/`, `scripts/resume.py` | The resume PDF |
+
+`images/avatar-320.jpg` (home page), `images/icon-512.jpg` (link previews and the
+Standard.site publication icon), `images/favicon-32.png` and
+`images/apple-touch-icon.png` are square crops of `images/bio-photo.jpg`. To
+change the photo, replace all four, then run `publish` so the publication record
+gets the new icon.
 
 ## Local preview
 
@@ -51,13 +59,18 @@ Verify a paper URL against the title and authors on a publisher, proceedings, or
 preprint record, or use a URL supplied by the author. Leave unavailable manuscript
 links unset; never invent URLs or use placeholders.
 
+A paper dated in the future stays off the site and out of the Standard.site
+records until that date. GitHub Pages rebuilds only when something is pushed,
+so the paper appears with the first push after its date.
+
 Every entry also needs a `standard_site_rkey`; see [Standard.site](#standardsite).
 
 ## Writing
 
 Posts go in `_posts/YYYY-MM-DD-short-title.md` with a `title` in the front
-matter. A post appears at `/writing/short-title/`, its first paragraph is its
-summary, and the Writing link appears in the navigation once a post exists.
+matter. A post appears at `/writing/short-title/`. Its summary is the
+`description` in its front matter, or else its first paragraph. The Writing link
+appears in the navigation once a post exists.
 Add `math: true` to a page's front matter to typeset LaTeX math with MathJax.
 Like papers, posts need a `standard_site_rkey`.
 
