@@ -18,7 +18,8 @@ layout: default
   {{ content }}
 </section>
 
-{%- if site.publications.size > 0 %}
+{%- assign current_papers = site.publications | where_exp: "paper", "paper.date <= site.time" -%}
+{%- if current_papers.size > 0 %}
 <section class="recent">
   <h2>Recent publications</h2>
   {% include publication-list.html style="compact" limit=4 %}

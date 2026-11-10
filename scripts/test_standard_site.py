@@ -210,6 +210,13 @@ class ValidateTests(unittest.TestCase):
         )
         self.assertIn("accentForeground on accent", problems)
 
+    def test_requires_published_at_except_for_uncommitted_undated_entries(self):
+        result = desired()
+        del result.documents[DOC]["publishedAt"]
+        self.assertIn("publishedAt is required", "\n".join(ss.validate(result)))
+        pending = desired(manifest(date=None), commit_date=lambda source: None)
+        self.assertEqual(ss.validate(pending), [])  # check notes it; publish refuses it
+
     def test_rejects_bad_documents(self):
         def edit(data):
             document = data["documents"][0]

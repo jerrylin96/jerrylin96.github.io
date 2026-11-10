@@ -459,6 +459,10 @@ def validate(desired):
         check_string(problems, f"{where}: description", record.get("description"), 30000, 3000)
         if "publishedAt" in record:
             check_datetime(problems, f"{where}: publishedAt", record["publishedAt"])
+        elif where not in desired.undated:
+            # Uncommitted undated entries get their date at commit time: check
+            # notes them, and publish refuses them until then.
+            problems.append(f"{where}: publishedAt is required.")
         for tag in record.get("tags", []):
             check_string(problems, f"{where}: tag", tag, 1280, 128, required=True)
         if "textContent" in record and not isinstance(record["textContent"], str):
