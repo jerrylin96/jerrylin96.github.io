@@ -1,4 +1,167 @@
-A Github Pages template for academic websites. This was forked (then detached) by [Stuart Geiger](https://github.com/staeiou) from the [Minimal Mistakes Jekyll Theme](https://mmistakes.github.io/minimal-mistakes/), which is © 2016 Michael Rose and released under the MIT License. See LICENSE.md.
+# jerrylin96.github.io
+
+Source for [Jerry Lin's website](https://jerrylin96.github.io). GitHub Pages
+builds it with Jekyll. It is also a [Standard.site](https://standard.site)
+publication on the AT Protocol: each paper and post is published as a record
+that Standard.site readers and search indexes can find and verify.
+
+| Path | Contents |
+| --- | --- |
+| `_pages/` | Home (`about.md`), publications, CV, writing, and 404 pages |
+| `_publications/` | One file per paper |
+| `_posts/` | Blog posts (create the folder with the first post) |
+| `_layouts/`, `_includes/` | Page templates |
+| `assets/css/main.css` | The only stylesheet |
+| `_config.yml` | Site settings, author links, and Standard.site settings |
+| `scripts/standard_site.py` | Checks and publishes the Standard.site records |
+| `main.typ`, `resume/`, `scripts/resume.py` | The resume PDF |
+
+## Local preview
+
+Install Ruby and Bundler, run `bundle install`, then start the preview:
+
+```sh
+bundle exec jekyll serve --config _config.yml,_config.local.yml --destination /tmp/jlin-site-preview
+```
+
+Open <http://127.0.0.1:4001/>. The local configuration sets the site URL used in
+canonical links to localhost and polls for file changes so edits trigger a
+rebuild. Refresh the browser after a rebuild; restart the server after changing
+configuration. GitHub Pages builds with `_config.yml` alone.
+
+GitHub Pages builds with Jekyll 3.10. `Gemfile.lock` pins Jekyll 3.9.3, which
+renders this site identically but fails on Ruby 3.3 or newer with
+``undefined method `[]' for nil`` in `logger.rb`. If you see that error,
+`bundle update github-pages` moves the lockfile to Jekyll 3.10.
+
+## Publications
+
+Publication entries without `publication_status` are treated as published. Use
+`publication_status: accepted` for accepted, peer-reviewed contributions and
+`publication_status: under_review` for preprints still in review. Both the
+publications page and HTML CV show accepted work first, then work under review,
+then published entries in reverse date order. Within the first two groups,
+entries are ordered by title. Use `publication_year` when only the year is known;
+omit `date` rather than inventing an acceptance or publication day. Year-only
+entries do not emit an inferred publication date in page metadata. Set `paperurl`
+when a public manuscript is available. Publication titles and "Read paper"
+buttons use that URL unless an explicit `link` overrides it. Keep the status in
+the `citation` text consistent with the entry's metadata. Summaries are optional.
+Verify a paper URL against the title and authors on a publisher, proceedings, or
+preprint record, or use a URL supplied by the author. Leave unavailable manuscript
+links unset; never invent URLs or use placeholders.
+
+Every entry also needs a `standard_site_rkey`; see [Standard.site](#standardsite).
+
+## Writing
+
+Posts go in `_posts/YYYY-MM-DD-short-title.md` with a `title` in the front
+matter. A post appears at `/writing/short-title/`, its first paragraph is its
+summary, and the Writing link appears in the navigation once a post exists.
+Add `math: true` to a page's front matter to typeset LaTeX math with MathJax.
+Like papers, posts need a `standard_site_rkey`.
+
+## Standard.site
+
+[Standard.site](https://standard.site) defines AT Protocol records for long-form
+publishing. This site is the publication
+`at://did:plc:qszahaiylwp5kys2irw4fllu/site.standard.publication/3mzwnpagwzs57`,
+owned by the Bluesky account `@jlin404.com`. Each paper and post is a
+`site.standard.document` in that publication.
+
+### How it fits together
+
+- `standard_site` in `_config.yml` holds the account's DID, the publication's
+  record key, its icon and discovery setting, which collections become
+  documents, and the theme colors.
+- Each paper and post has a `standard_site_rkey` in its front matter: the record
+  key of its document, assigned once. Never change or reuse one. It is the
+  document's identity on the network, so a new key creates a separate record.
+- Jekyll renders the verification the spec requires:
+  `/.well-known/site.standard.publication` contains the publication's AT-URI,
+  each document page links its record with
+  `<link rel="site.standard.document">`, and every page links the publication
+  with `<link rel="site.standard.publication">`.
+- Jekyll also renders `/standard-site.json`, the records the site declares,
+  from the same front matter and content as the pages.
+  `scripts/standard_site.py` validates that file and writes its records to the
+  account's server.
+
+Because record keys are chosen before the records exist, the pages and the
+records can go live in either order, and publishing again updates records in
+place instead of adding duplicates.
+
+A document's description is the entry's summary, or its citation if it has
+none. Its text content is the page's text without formatting. `publishedAt` is
+the entry's `date` (for a post, the date in its filename). Entries with only a
+`publication_year` have no date to state, so their `publishedAt` is when the
+page was first committed.
+
+### Adding a paper or post
+
+Write the entry, then give it a record key and commit both:
+
+```sh
+python3 scripts/standard_site.py assign _publications/new-paper.md
+```
+
+Run `assign` with no arguments to key every entry that a build lists as
+missing. CI fails if a paper or post has no key.
+
+### Publishing the records
+
+Publish after the change is live on <https://jerrylin96.github.io>:
+
+1. Create an app password in Bluesky under Settings → Privacy and security →
+   App passwords. Do not use the account password.
+2. Preview the changes, which only reads:
+
+   ```sh
+   python3 scripts/standard_site.py plan
+   ```
+
+3. Publish:
+
+   ```sh
+   ATPROTO_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx python3 scripts/standard_site.py publish
+   ```
+
+`publish` reads the deployed site rather than a local build, refuses to write
+unless that site's verification matches the records, shows the plan, and asks
+before writing. It writes only records that changed. When a paper is removed, its
+record is listed as `extra`, and `publish --prune` deletes it. Run `publish`
+again after any change to a paper or post.
+
+### Checking a build
+
+```sh
+bundle exec jekyll build
+python3 scripts/standard_site.py check
+python3 -m unittest discover -s scripts
+```
+
+Build with `_config.yml` alone: `check` rejects the localhost URL from
+`_config.local.yml`. It validates the records against the lexicons and confirms
+that every verification marker matches. The `Standard.site` workflow runs these
+steps on pushes and PRs targeting `jerry` or `main`, building with
+`actions/jekyll-build-pages`, the same build GitHub Pages runs.
+
+### Colors
+
+`standard_site.theme` sets the publication's `basicTheme`, which readers use to
+show it, and the site's own palette in `assets/css/main.css`, so the two always
+match. Dark mode, which follows the reader's system setting, is defined only in
+the stylesheet. `check` requires 4.5:1 contrast for text on the background and on
+the accent color.
+
+### Seeing the records
+
+- The publication record:
+  <https://pdsls.dev/at://did:plc:qszahaiylwp5kys2irw4fllu/site.standard.publication/3mzwnpagwzs57>
+- The [Standard.site validator](https://site-validator.fly.dev) checks a
+  document URL.
+- [Readers and indexes](https://standard.site/docs/implementations/) list
+  publications that allow discovery (`show_in_discover`).
 
 ## Resume
 
@@ -34,21 +197,6 @@ history and its publications list; it is a separate, longer document, so changes
 to facts appearing in both documents should update both. Resume build sources and
 scripts are excluded from Jekyll's published output.
 
-Publication entries without `publication_status` are treated as published. Use
-`publication_status: accepted` for accepted, peer-reviewed contributions and
-`publication_status: under_review` for preprints still in review. Both the
-publications page and HTML CV show accepted work first, then work under review,
-then published entries in reverse date order. Within the first two groups,
-entries are ordered by title. Use `publication_year` when only the year is known;
-omit `date` rather than inventing an acceptance or publication day. Year-only
-entries do not emit an inferred publication date in page metadata. Set `paperurl`
-when a public manuscript is available. Publication titles and "Read paper"
-buttons use that URL unless an explicit `link` overrides it. Keep the status in
-the `citation` text consistent with the entry's metadata. Summaries are optional.
-Verify a paper URL against the title and authors on a publisher, proceedings, or
-preprint record, or use a URL supplied by the author. Leave unavailable manuscript
-links unset; never invent URLs or use placeholders.
-
 The read-only `Resume` workflow runs on pushes and PRs targeting `jerry` or `main`.
 It validates the artifact without committing files or replacing native GitHub
 Pages deployment. To require validation before publication, configure the Pages
@@ -56,47 +204,8 @@ publishing branch to require PRs and the `Verify resume` check; a failing workfl
 by itself does not block deployment after a direct push. Confirm the Linux CI
 check passes before merging changes produced on another platform.
 
-I think I've got things running smoothly and fixed some major bugs, but feel free to file issues or make pull requests if you want to improve the generic template / theme.
+## Credits
 
-### Note: if you are using this repo and now get a notification about a security vulnerability, delete the Gemfile.lock file. 
-
-# Instructions
-
-1. Register a GitHub account if you don't have one and confirm your e-mail (required!)
-1. Fork [this repository](https://github.com/academicpages/academicpages.github.io) by clicking the "fork" button in the top right. 
-1. Go to the repository's settings (rightmost item in the tabs that start with "Code", should be below "Unwatch"). Rename the repository "[your GitHub username].github.io", which will also be your website's URL.
-1. Set site-wide configuration and create content & metadata (see below -- also see [this set of diffs](http://archive.is/3TPas) showing what files were changed to set up [an example site](https://getorg-testacct.github.io) for a user with the username "getorg-testacct")
-1. Upload any files (like PDFs, .zip files, etc.) to the files/ directory. They will appear at https://[your GitHub username].github.io/files/example.pdf.  
-1. Check status by going to the repository settings, in the "GitHub pages" section
-1. (Optional) Use the Jupyter notebooks or python scripts in the `markdown_generator` folder to generate markdown files for publications and talks from a TSV file.
-
-See more info at https://academicpages.github.io/
-
-## To run locally (not on GitHub Pages, to serve on your own computer)
-
-1. Clone the repository and made updates as detailed above
-1. Make sure you have ruby-dev, bundler, and nodejs installed: `sudo apt install ruby-dev ruby-bundler nodejs`
-1. Run `bundle clean` to clean up the directory (no need to run `--force`)
-1. Run `bundle install` to install ruby dependencies. If you get errors, delete Gemfile.lock and try again.
-1. Start the local preview:
-
-   ```sh
-   bundle exec jekyll serve --config _config.yml,_config.local.yml --destination /tmp/jlin-site-preview
-   ```
-
-   Open <http://127.0.0.1:4001/>. The local configuration keeps navigation links
-   on localhost and polls for file changes so edits trigger a rebuild. Refresh
-   the browser after a rebuild; restart the server after changing configuration.
-   GitHub Pages continues to use `_config.yml` for the production site.
-
-   For a one-off local build, use the same configuration:
-
-   ```sh
-   bundle exec jekyll build --config _config.yml,_config.local.yml --destination /tmp/jlin-site-preview
-   ```
-
-# Changelog -- bugfixes and enhancements
-
-There is one logistical issue with a ready-to-fork template theme like academic pages that makes it a little tricky to get bug fixes and updates to the core theme. If you fork this repository, customize it, then pull again, you'll probably get merge conflicts. If you want to save your various .yml configuration files and markdown files, you can delete the repository and fork it again. Or you can manually patch. 
-
-To support this, all changes to the underlying code appear as a closed issue with the tag 'code change' -- get the list [here](https://github.com/academicpages/academicpages.github.io/issues?q=is%3Aclosed%20is%3Aissue%20label%3A%22code%20change%22%20). Each issue thread includes a comment linking to the single commit or a diff across multiple commits, so those with forked repositories can easily identify what they need to patch.
+The site began as a fork of [academicpages](https://github.com/academicpages/academicpages.github.io),
+itself derived from the [Minimal Mistakes](https://mademistakes.com/work/minimal-mistakes-jekyll-theme/)
+Jekyll theme © 2016 Michael Rose, released under the MIT License (see `LICENSE`).

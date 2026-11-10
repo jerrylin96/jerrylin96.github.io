@@ -1,0 +1,35 @@
+name: Standard.site
+
+# Always produce a check, including for PRs that only change website content.
+on:
+  push:
+    branches: [jerry, main]
+  pull_request:
+    branches: [jerry, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: read # the GitHub Pages build may look up the site's Pages settings
+
+jobs:
+  standard-site:
+    name: Verify Standard.site records
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          # Documents without a date use their first commit date, which needs
+          # full history.
+          fetch-depth: 0
+      - name: Test the publishing script
+        run: python3 -m unittest discover -s scripts
+      - name: Build the site the way GitHub Pages does
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Check records and verification markers
+        run: python3 scripts/standard_site.py check
