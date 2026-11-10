@@ -9,4 +9,5 @@ citation: >-
   Lin, J., and Barnes, E. A. (2026). Run It Back: Autoregression vs. Video
   Diffusion for End-Conditioned Weather Trajectories. <i>NeurIPS 2026 Workshop
   on Tackling Climate Change with Machine Learning</i>. Accepted, peer reviewed.
+standard_site_rkey: 3mzwnrqmtmhuk
 ---

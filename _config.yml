@@ -10,7 +10,7 @@ locale                   : "en-US"
 title                    : "Jerry Lin"
 title_separator          : "-"
 name                     : &name "Jerry Lin"
-description              : &description "personal description"
+description              : &description "Research on machine learning for climate modeling by Jerry Lin, a postdoctoral researcher at Boston University."
 url                      : https://jerrylin96.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "jerrylin96/jerrylin96.github.io"
@@ -20,6 +20,22 @@ words_per_minute         : 160
 future                   : false
 read_more                : "disabled" # if enabled, adds "Read more" links to excerpts
 talkmap_link             : false #change to true to add link to talkmap on talks page
+
+# Standard.site: this website is a site.standard.publication on the AT Protocol,
+# and each page in `collections` is a site.standard.document. See README.md.
+standard_site:
+  did                    : "did:plc:qszahaiylwp5kys2irw4fllu" # @jlin404.com
+  publication            : "3mzwnpagwzs57" # record key of the publication
+  icon                   : "/images/icon-512.jpg" # square, at least 256x256, under 1 MB
+  show_in_discover       : true # let Standard.site readers list this publication
+  collections            : [publications, posts]
+  # site.standard.theme.basic, as [r, g, b]. These also set the site's own colors
+  # (assets/css/main.scss), so readers show the publication the way the site looks.
+  theme:
+    background           : [255, 255, 255]
+    foreground           : [28, 32, 36]
+    accent               : [18, 94, 150]
+    accent_foreground    : [255, 255, 255]
 comments:
   provider               : # false (default), "disqus", "discourse", "facebook", "google-plus", "staticman", "custom"
   disqus:
@@ -119,6 +135,7 @@ author:
 # Reading Files
 include:
   - .htaccess
+  - .well-known
   - _pages
   - files
 exclude:

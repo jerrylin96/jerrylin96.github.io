@@ -1,0 +1,13 @@
+{%- comment -%}
+  Standard.site verification. The publication link is a discovery hint on
+  every page; the document link lets readers verify a document record against
+  the page it describes. The record keys are set in _config.yml and in each
+  document's front matter (standard_site_rkey). See README.md.
+{%- endcomment -%}
+{%- assign ss = site.standard_site -%}
+{%- if ss.did and ss.publication %}
+<link rel="site.standard.publication" href="at://{{ ss.did }}/site.standard.publication/{{ ss.publication }}">
+  {%- if page.standard_site_rkey %}
+<link rel="site.standard.document" href="at://{{ ss.did }}/site.standard.document/{{ page.standard_site_rkey }}">
+  {%- endif -%}
+{%- endif -%}
