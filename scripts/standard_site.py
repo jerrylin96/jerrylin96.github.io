@@ -24,10 +24,8 @@ import base64
 import datetime as dt
 import getpass
 import hashlib
-import html
 from html.parser import HTMLParser
 import json
-import mimetypes
 import os
 from pathlib import Path
 import re
@@ -212,14 +210,66 @@ def drop_nulls(value):
     return value
 
 
-def one_line(text):
-    return " ".join(html.unescape(text).split())
+BLOCK_TAGS = {
+    "address", "article", "aside", "blockquote", "br", "dd", "div", "dl", "dt",
+    "figcaption", "figure", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header",
+    "hr", "li", "ol", "p", "pre", "section", "table", "td", "th", "tr", "ul",
+}
 
 
-def paragraphs(text):
-    """Plain text with Jekyll's tag-stripped HTML collapsed into paragraphs."""
-    blocks = re.split(r"\n\s*\n", html.unescape(text))
-    return "\n\n".join(" ".join(block.split()) for block in blocks if block.split())
+class TextExtractor(HTMLParser):
+    """Plain text of rendered HTML, one paragraph per block element.
+
+    Skips scripts, styles, and kramdown's footnote markers and definitions,
+    which are not part of the prose. Liquid's strip_html cannot do this: it
+    deletes anything between < and >, including text like "N < 100 > 10".
+    """
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.blocks, self.words, self.skipping = [], [], None
+
+    def handle_starttag(self, tag, attrs):
+        if self.skipping:
+            if tag == self.skipping[0]:
+                self.skipping[1] += 1
+            return
+        attributes = dict(attrs)
+        footnote = (
+            "footnotes" in (attributes.get("class") or "").split()
+            or (tag == "sup" and (attributes.get("id") or "").startswith("fnref"))
+        )
+        if tag in ("script", "style", "template") or footnote:
+            self.skipping = [tag, 1]
+        elif tag in BLOCK_TAGS:
+            self.end_block()
+
+    def handle_endtag(self, tag):
+        if self.skipping:
+            if tag == self.skipping[0]:
+                self.skipping[1] -= 1
+                if not self.skipping[1]:
+                    self.skipping = None
+        elif tag in BLOCK_TAGS:
+            self.end_block()
+
+    def handle_data(self, data):
+        if not self.skipping:
+            self.words.append(data)
+
+    def end_block(self):
+        text = " ".join("".join(self.words).split())
+        if text:
+            self.blocks.append(text)
+        self.words = []
+
+
+def html_to_text(fragment, paragraphs=True):
+    parser = TextExtractor()
+    parser.feed(fragment)
+    parser.close()
+    parser.end_block()
+    return ("\n\n" if paragraphs else " ").join(parser.blocks)
 
 
 def to_utc(timestamp):
@@ -266,29 +316,44 @@ class Desired:
         self.documents = {}
         self.sources = {}
         self.undated = []
+        self.notes = []
         # Jekyll gives a collection document without a date the build time.
         build_time = manifest.get("buildTime")
         for entry in manifest["documents"]:
-            rkey = entry["rkey"]
+            rkey, source = entry["rkey"], entry["source"]
             record = drop_nulls(entry["record"])
-            record["title"] = one_line(record.get("title", ""))
-            for key, clean in (("description", one_line), ("textContent", paragraphs)):
+            # The manifest carries these as rendered HTML.
+            for key in ("title", "description", "textContent"):
                 if key in record:
-                    record[key] = clean(record[key])
+                    record[key] = html_to_text(record[key], paragraphs=key == "textContent")
                     if not record[key]:
                         del record[key]
-            if entry.get("date") and entry["date"] != build_time:
-                record["publishedAt"] = to_utc(entry["date"])
+            date = entry.get("date")
+            if date == build_time:
+                date = None
+            if entry.get("publicationYear"):
+                if date:
+                    self.notes.append(
+                        f"{source} sets both date and publication_year; as on its page, "
+                        "the date is not used. Remove publication_year to publish the date."
+                    )
+                date = None
+            if date:
+                record["publishedAt"] = to_utc(date)
             else:
-                published = commit_date(entry["source"])
+                published = commit_date(source)
                 if published:
                     record["publishedAt"] = published
                 else:
-                    self.undated.append(entry["source"])
+                    self.undated.append(source)
+                    self.notes.append(
+                        f"{source} is not committed yet; its publishedAt will be its first "
+                        "commit date."
+                    )
             if rkey in self.documents:
                 raise ValueError(f"Record key {rkey} is used by more than one document.")
             self.documents[rkey] = record
-            self.sources[rkey] = entry["source"]
+            self.sources[rkey] = source
 
     def document_uri(self, rkey):
         return at_uri(self.did, DOCUMENT, rkey)
@@ -297,7 +362,8 @@ class Desired:
 def load_desired(site):
     raw = site.read(MANIFEST_PATH)
     if raw is None:
-        raise ValueError(f"{site.location}{MANIFEST_PATH} not found.")
+        hint = " Is this version of the site deployed yet?" if site.is_url else ""
+        raise ValueError(f"{site.location}{MANIFEST_PATH} not found.{hint}")
     return Desired(json.loads(raw))
 
 
@@ -449,6 +515,8 @@ def verify(site, desired):
         icon = site.read(desired.icon_path)
         if icon is None:
             problems.append(f"Publication icon {desired.icon_path} is missing.")
+        elif image_type(icon) is None:
+            problems.append(f"Publication icon {desired.icon_path} is not a PNG, JPEG, GIF or WebP image.")
         elif len(icon) > MAX_BLOB_BYTES:
             problems.append(f"Publication icon {desired.icon_path} is over 1 MB.")
     return problems
@@ -514,6 +582,11 @@ class Pds:
             if not cursor or not page.get("records"):
                 return records
 
+    def create_record(self, did, collection, rkey, record):
+        """Fails if the record exists, unlike putRecord."""
+        body = {"repo": did, "collection": collection, "rkey": rkey, "record": record}
+        return self.call("POST", "com.atproto.repo.createRecord", body=body)
+
     def put_record(self, did, collection, rkey, record, swap=None):
         body = {"repo": did, "collection": collection, "rkey": rkey, "record": record}
         if swap:
@@ -559,14 +632,27 @@ def changed_fields(desired, existing):
     return sorted(k for k in keys if desired.get(k) != existing.get(k))
 
 
+def image_type(data):
+    """The MIME type of PNG, JPEG, GIF or WebP bytes, read from the bytes the
+    way a PDS reads them (a file's extension can disagree)."""
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if data.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
 def icon_blob(site, desired):
     if not desired.icon_path:
         return None, None
     data = site.read(desired.icon_path)
-    if data is None:
-        raise ValueError(f"Publication icon {desired.icon_path} is missing.")
-    mime_type = mimetypes.guess_type(desired.icon_path)[0] or "application/octet-stream"
-    ref = {"$type": "blob", "ref": {"$link": blob_cid(data)}, "mimeType": mime_type,
+    if data is None or image_type(data) is None:
+        raise ValueError(f"Publication icon {desired.icon_path} is missing or not an image.")
+    ref = {"$type": "blob", "ref": {"$link": blob_cid(data)}, "mimeType": image_type(data),
            "size": len(data)}
     return ref, data
 
@@ -575,8 +661,31 @@ def plan_changes(desired, icon, existing_publication, existing_documents, now):
     """Diff the site's records against the PDS.
 
     existing_publication is a getRecord result or None; existing_documents maps
-    record keys to listRecords entries for documents in this publication.
+    record keys to listRecords entries for this publication's documents and for
+    any record at a key the site uses.
+
+    Refuses to plan any write to a record that belongs to another site, such as
+    a publication created by another app whose key was copied into the config.
     """
+    def same(first, second):
+        return str(first or "").rstrip("/") == str(second or "").rstrip("/")
+
+    if existing_publication is not None:
+        theirs = existing_publication["value"].get("url")
+        if not same(theirs, desired.publication["url"]):
+            raise ValueError(
+                f"{desired.publication_uri} is the publication for {theirs}, not "
+                f"{desired.publication['url']}. standard_site.publication must be a "
+                "record key that belongs to this site."
+            )
+    for rkey in desired.documents:
+        current = existing_documents.get(rkey)
+        if current is not None and not same(current["value"].get("site"), desired.publication_uri):
+            raise ValueError(
+                f"{desired.document_uri(rkey)} belongs to {current['value'].get('site')}, not "
+                f"this publication. Give {desired.sources[rkey]} a new {RKEY_FIELD}."
+            )
+
     changes = []
     publication = dict(desired.publication)
     if icon:
@@ -612,7 +721,8 @@ def fetch_existing(pds, desired):
     documents = {}
     for entry in pds.list_records(desired.did, DOCUMENT):
         rkey = entry["uri"].rsplit("/", 1)[-1]
-        if rkey in desired.documents or entry["value"].get("site") == desired.publication_uri:
+        site = str(entry["value"].get("site", "")).rstrip("/")
+        if rkey in desired.documents or site == desired.publication_uri:
             documents[rkey] = entry
     return publication, documents
 
@@ -644,7 +754,10 @@ def apply_changes(pds, desired, changes, icon_data, prune):
             # Upload only when the icon changed; an unchanged ref stays valid.
             if "icon" in change.fields or change.action == "create":
                 record = {**record, "icon": pds.upload_blob(icon_data, record["icon"]["mimeType"])}
-        pds.put_record(desired.did, change.collection, change.rkey, record, change.swap)
+        if change.action == "create":
+            pds.create_record(desired.did, change.collection, change.rkey, record)
+        else:
+            pds.put_record(desired.did, change.collection, change.rkey, record, change.swap)
         print(f"{change.action.capitalize()}d {at_uri(desired.did, change.collection, change.rkey)}")
 
 
@@ -701,8 +814,8 @@ def command_check(args):
     problems = validate(desired) + verify(site, desired)
     if problems:
         raise ValueError("Standard.site check failed:\n  " + "\n  ".join(problems))
-    for source in desired.undated:
-        print(f"Note: {source} is not committed yet; its publishedAt will be its first commit date.")
+    for note in desired.notes:
+        print(f"Note: {note}")
     print(f"OK: {desired.publication_uri} and {len(desired.documents)} documents "
           f"are valid and verifiable in {site.location}.")
 
@@ -731,11 +844,12 @@ def command_plan(args):
 
 
 def command_publish(args):
-    site = Site(args.site or production_url())
-    if not site.is_url:
-        raise ValueError("publish reads the deployed site so records match what readers see; "
-                         "--site must be a URL.")
+    # Always the production site, so records are written only once the pages
+    # that verify them are live where readers will look.
+    site = Site(production_url())
     desired, endpoint, changes, icon_data = prepare(site)
+    if desired.publication["url"].rstrip("/") != site.location:
+        raise ValueError(f"The publication url {desired.publication['url']} is not {site.location}.")
     print(f"Publication {desired.publication_uri} on {endpoint}")
     print_plan(changes, desired, args.prune)
     writes = [c for c in changes if c.action != "delete" or args.prune]
@@ -770,7 +884,8 @@ def main(argv=None):
         ("publish", command_publish, "write the records to the PDS"),
     ):
         command = commands.add_parser(name, help=text)
-        command.add_argument("--site", help="site URL or built directory (default: url in _config.yml)")
+        if name == "plan":
+            command.add_argument("--site", help="site URL or built directory (default: url in _config.yml)")
         command.add_argument("--prune", action="store_true",
                              help="delete records in this publication that the site no longer has")
         if name == "publish":

@@ -7,6 +7,9 @@ sitemap: false
   The Standard.site records this site declares. scripts/standard_site.py checks
   this file against the lexicons and the built pages, then writes the records
   to the PDS. Fields that render as null or "" are left out of the records.
+  A document's title, description and textContent are rendered HTML here; the
+  script turns them into plain text with an HTML parser, because strip_html
+  deletes text between any "<" and ">".
 {%- endcomment -%}
 {%- assign ss = site.standard_site -%}
 {%- assign publication_uri = "at://" | append: ss.did | append: "/site.standard.publication/" | append: ss.publication -%}
@@ -16,6 +19,8 @@ sitemap: false
     {%- assign docs = docs | concat: collection.docs -%}
   {%- endif -%}
 {%- endfor -%}
+{%- comment -%} Like their pages, documents dated in the future wait for their date. {%- endcomment -%}
+{%- assign docs = docs | where_exp: "doc", "doc.date <= site.time" -%}
 {%- assign assigned = docs | where_exp: "doc", "doc.standard_site_rkey" -%}
 {%- assign missing = docs | where_exp: "doc", "doc.standard_site_rkey == nil" -%}
 {
@@ -47,32 +52,37 @@ sitemap: false
   },
   "documents": [
     {%- for doc in assigned %}
-    {%- capture description -%}{{ doc.description | default: doc.excerpt | strip_html | strip }}{%- endcapture -%}
-    {%- if description == "" and doc.citation -%}
-      {%- assign description = doc.citation | strip_html -%}
+    {%- capture excerpt_text -%}{{ doc.excerpt | strip_html | strip }}{%- endcapture -%}
+    {%- if doc.description -%}
+      {%- assign description = doc.description | markdownify -%}
+    {%- elsif excerpt_text != "" -%}
+      {%- capture description -%}{{ doc.excerpt }}{%- endcapture -%}
+    {%- elsif doc.citation -%}
+      {%- assign description = doc.citation | markdownify -%}
+    {%- else -%}
+      {%- assign description = "" -%}
     {%- endif -%}
     {%- capture text -%}
       {%- if doc.collection == "publications" and doc.venue -%}
-        {% include publication-meta.html paper=doc %}
-
-      {% endif -%}
-      {{ doc.content | strip_html }}
-      {%- if doc.citation %}
-
-        Recommended citation: {{ doc.citation | strip_html }}
+        <p>{% include publication-meta.html paper=doc %}</p>
+      {%- endif -%}
+      {{ doc.content }}
+      {%- if doc.citation -%}
+        <p>Recommended citation: {{ doc.citation }}</p>
       {%- endif -%}
     {%- endcapture %}
     {
       "rkey": {{ doc.standard_site_rkey | jsonify }},
       "source": {{ doc.relative_path | jsonify }},
-      "date": {% if doc.publication_year %}null{% else %}{{ doc.date | date_to_xmlschema | jsonify }}{% endif %},
+      "date": {{ doc.date | date_to_xmlschema | jsonify }},
+      "publicationYear": {{ doc.publication_year | jsonify }},
       "record": {
         "$type": "site.standard.document",
         "site": {{ publication_uri | jsonify }},
         "path": {{ site.baseurl | append: doc.url | jsonify }},
-        "title": {{ doc.title | strip_html | jsonify }},
+        "title": {{ doc.title | markdownify | jsonify }},
         "description": {{ description | jsonify }},
-        "textContent": {{ text | strip_html | jsonify }},
+        "textContent": {{ text | jsonify }},
         "tags": {{ doc.tags | jsonify }}
       }
     }{% unless forloop.last %},{% endunless %}

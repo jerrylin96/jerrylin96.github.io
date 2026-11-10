@@ -1,22 +1,28 @@
 {%- comment -%} An empty excerpt renders as whitespace, which `default` keeps. {%- endcomment -%}
 {%- capture excerpt -%}{{ page.excerpt | strip_html | strip }}{%- endcapture -%}
+{%- comment -%}
+  Titles and descriptions below contain HTML entities (markdownify escapes a
+  literal "<" as &lt;), so they are output with escape_once, which does not
+  escape an entity twice. strip_html alone would delete "< 100 >" from a title.
+{%- endcomment -%}
+{%- assign page_title = page.title | default: site.title | markdownify | strip_html | strip -%}
 {%- if page.url == "/" -%}
   {%- assign title = site.title -%}
   {%- assign description = site.description -%}
 {%- else -%}
-  {%- assign title = page.title | strip_html | append: " · " | append: site.title -%}
+  {%- assign title = page_title | append: " · " | append: site.title -%}
   {%- assign description = page.description | default: excerpt | default: page.citation | default: site.description -%}
 {%- endif -%}
 {%- assign description = description | strip_html | normalize_whitespace | strip | truncate: 220 -%}
 {%- assign theme = site.standard_site.theme %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ title | escape }}</title>
-<meta name="description" content="{{ description | escape }}">
+<title>{{ title | escape_once }}</title>
+<meta name="description" content="{{ description | escape_once }}">
 <link rel="canonical" href="{{ page.url | absolute_url }}">
 <meta property="og:site_name" content="{{ site.title | escape }}">
-<meta property="og:title" content="{{ page.title | default: site.title | strip_html | escape }}">
-<meta property="og:description" content="{{ description | escape }}">
+<meta property="og:title" content="{{ page_title | escape_once }}">
+<meta property="og:description" content="{{ description | escape_once }}">
 <meta property="og:url" content="{{ page.url | absolute_url }}">
 <meta property="og:image" content="{{ site.standard_site.icon | absolute_url }}">
 <meta name="twitter:card" content="summary">

@@ -92,10 +92,12 @@ records can go live in either order, and publishing again updates records in
 place instead of adding duplicates.
 
 A document's description is the entry's summary, or its citation if it has
-none. Its text content is the page's text without formatting. `publishedAt` is
-the entry's `date` (for a post, the date in its filename). Entries with only a
-`publication_year` have no date to state, so their `publishedAt` is when the
-page was first committed.
+none. Its text content is the page's text without formatting or footnotes.
+`publishedAt` is the entry's `date` (for a post, the date in its filename).
+Entries with a `publication_year` have no date to state, so their `publishedAt`
+is when the page was first committed. If such an entry also sets `date`, the
+date is ignored, as it is on the page, and `check` prints a note. Entries dated
+in the future are published once their date has passed and the site is rebuilt.
 
 ### Adding a paper or post
 
@@ -126,11 +128,14 @@ Publish after the change is live on <https://jerrylin96.github.io>:
    ATPROTO_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx python3 scripts/standard_site.py publish
    ```
 
-`publish` reads the deployed site rather than a local build, refuses to write
-unless that site's verification matches the records, shows the plan, and asks
-before writing. It writes only records that changed. When a paper is removed, its
-record is listed as `extra`, and `publish --prune` deletes it. Run `publish`
-again after any change to a paper or post.
+`publish` reads the deployed site at the `url` in `_config.yml` rather than a
+local build. It refuses to write unless that site's verification matches the
+records, shows the plan, and asks before writing. It writes only records that
+changed, creates new ones only where no record exists, and stops without
+writing anything if a record key belongs to another site or publication (such
+as one made in Leaflet). When a paper is removed, its record is listed as
+`extra`, and `publish --prune` deletes it. Run `publish` again after any change
+to a paper or post.
 
 ### Checking a build
 

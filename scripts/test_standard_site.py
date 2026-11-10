@@ -19,6 +19,7 @@ PUB = "3mzwnpagwzs57"
 DOC = "3mzwnrqmtteuk"
 PUB_URI = f"at://{DID}/site.standard.publication/{PUB}"
 DOC_URI = f"at://{DID}/site.standard.document/{DOC}"
+JPEG = b"\xff\xd8\xff\xe0 jpeg"
 
 
 def color(r, g, b):
@@ -30,13 +31,14 @@ def manifest(**document_overrides):
         "rkey": DOC,
         "source": "_publications/signoff.md",
         "date": "2026-05-13T00:00:00-07:00",
+        "publicationYear": None,
         "record": {
             "$type": "site.standard.document",
             "site": PUB_URI,
             "path": "/publication/signoff",
-            "title": "  Signoff:\n Accountability ",
-            "description": "Tom &amp; Jerry",
-            "textContent": "First   line\nwraps.\n\n\nSecond &lt;p&gt;",
+            "title": "<p>Signoff:\n N &lt; 100 </p>\n",
+            "description": "<p>Tom &amp; Jerry</p>",
+            "textContent": "<p>First   line\nwraps.</p>\n<p>Second &lt;p&gt;</p>",
             "tags": [],
         },
     }
@@ -127,6 +129,22 @@ class FrontMatterTests(unittest.TestCase):
             ss.add_rkey("# No front matter\n", DOC)
 
 
+class TextTests(unittest.TestCase):
+    def test_paragraphs_entities_and_angle_brackets(self):
+        html = "<h2>Head</h2><p>N &lt; 100 and\n  leads &gt; 10 &amp; more</p><ul><li>a</li><li><em>b</em>c</li></ul>"
+        self.assertEqual(ss.html_to_text(html), "Head\n\nN < 100 and leads > 10 & more\n\na\n\nbc")
+        self.assertEqual(ss.html_to_text(html, paragraphs=False), "Head N < 100 and leads > 10 & more a bc")
+
+    def test_drops_kramdown_footnotes_and_scripts(self):
+        html = (
+            '<p>Claim<sup id="fnref:1" role="doc-noteref"><a href="#fn:1" class="footnote">1</a></sup>.</p>'
+            '<script>var x = "<p>no</p>";</script>'
+            '<div class="footnotes" role="doc-endnotes"><ol><li id="fn:1"><div><p>Note.</p></div>'
+            '<a href="#fnref:1" class="reversefootnote">&#8617;</a></li></ol></div><p>After.</p>'
+        )
+        self.assertEqual(ss.html_to_text(html), "Claim.\n\nAfter.")
+
+
 class LinkTests(unittest.TestCase):
     def test_finds_links_by_rel_token(self):
         page = (
@@ -142,7 +160,7 @@ class DesiredTests(unittest.TestCase):
     def test_cleans_records(self):
         result = desired()
         record = result.documents[DOC]
-        self.assertEqual(record["title"], "Signoff: Accountability")
+        self.assertEqual(record["title"], "Signoff: N < 100")
         self.assertEqual(record["description"], "Tom & Jerry")
         self.assertEqual(record["textContent"], "First line wraps.\n\nSecond <p>")
         self.assertEqual(record["publishedAt"], "2026-05-13T07:00:00.000Z")
@@ -155,6 +173,11 @@ class DesiredTests(unittest.TestCase):
             with self.subTest(date=date):
                 record = desired(manifest(date=date)).documents[DOC]
                 self.assertEqual(record["publishedAt"], "2026-10-24T23:49:34.000Z")
+
+    def test_publication_year_overrides_date_with_a_note(self):
+        result = desired(manifest(publicationYear=2026))
+        self.assertEqual(result.documents[DOC]["publishedAt"], "2026-10-24T23:49:34.000Z")
+        self.assertIn("sets both date and publication_year", result.notes[0])
 
     def test_uncommitted_undated_documents_are_reported(self):
         result = desired(manifest(date=None), commit_date=lambda source: None)
@@ -209,7 +232,8 @@ class VerifyTests(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.root = Path(self.directory.name)
         self.write(".well-known/site.standard.publication", PUB_URI)
-        self.write("images/icon.jpg", "jpeg")
+        (self.root / "images").mkdir()
+        (self.root / "images/icon.jpg").write_bytes(JPEG)
         self.write("publication/signoff.html", self.page(DOC_URI))
         self.write("index.html", self.page())
 
@@ -254,14 +278,28 @@ class VerifyTests(unittest.TestCase):
         self.write("cv/index.html", self.page(DOC_URI.replace(DOC, "3mzwnrqmtteul")))
         self.assertIn("not a document in the manifest", self.verify())
 
+    def test_icon_must_be_an_image(self):
+        (self.root / "images/icon.jpg").write_text("not an image")
+        self.assertIn("is not a PNG, JPEG, GIF or WebP image", self.verify())
+
     def test_missing_page(self):
         (self.root / "publication/signoff.html").unlink()
         self.assertIn("/publication/signoff: page not found", self.verify())
 
 
 class FakePds:
-    def __init__(self):
+    def __init__(self, publication=None, documents=()):
         self.calls = []
+        self.publication, self.documents = publication, list(documents)
+
+    def get_record(self, did, collection, rkey):
+        return self.publication
+
+    def list_records(self, did, collection):
+        return self.documents
+
+    def create_record(self, did, collection, rkey, record):
+        self.calls.append(("create", collection, rkey, record))
 
     def put_record(self, did, collection, rkey, record, swap=None):
         self.calls.append(("put", collection, rkey, record, swap))
@@ -282,9 +320,9 @@ def apply(pds, site, changes, icon_data, prune):
 
 class PlanTests(unittest.TestCase):
     NOW = "2026-11-10T12:00:00.000Z"
-    ICON_DATA = b"jpeg"
-    ICON = {"$type": "blob", "ref": {"$link": ss.blob_cid(b"jpeg")}, "mimeType": "image/jpeg",
-            "size": 4}
+    ICON_DATA = JPEG
+    ICON = {"$type": "blob", "ref": {"$link": ss.blob_cid(JPEG)}, "mimeType": "image/jpeg",
+            "size": len(JPEG)}
 
     def setUp(self):
         self.site = desired()
@@ -305,7 +343,7 @@ class PlanTests(unittest.TestCase):
                          [("create", ss.PUBLICATION), ("create", ss.DOCUMENT)])
         pds = FakePds()
         apply(pds, self.site, changes, self.ICON_DATA, prune=False)
-        self.assertEqual([call[0] for call in pds.calls], ["upload", "put", "put"])
+        self.assertEqual([call[0] for call in pds.calls], ["upload", "create", "create"])
 
     def test_unchanged_records_are_left_alone(self):
         self.assertEqual(self.plan(), [])
@@ -330,6 +368,77 @@ class PlanTests(unittest.TestCase):
             pds = FakePds()
             apply(pds, self.site, changes, self.ICON_DATA, prune=prune)
             self.assertEqual(pds.calls, expected)
+
+    def test_refuses_a_publication_key_that_belongs_to_another_site(self):
+        self.existing_publication["value"] = {**self.existing_publication["value"],
+                                              "url": "https://coupledsystems.leaflet.pub"}
+        with self.assertRaisesRegex(ValueError, "publication for https://coupledsystems"):
+            self.plan()
+
+    def test_refuses_a_document_key_that_belongs_to_another_publication(self):
+        other = PUB_URI.replace(PUB, "3m6v3hmb64k2h")
+        self.existing_documents[DOC]["value"] = {**self.existing_documents[DOC]["value"], "site": other}
+        with self.assertRaisesRegex(ValueError, "Give _publications/signoff.md a new"):
+            self.plan()
+
+    def test_a_trailing_slash_is_the_same_site_and_gets_normalized(self):
+        self.existing_publication["value"] = {**self.existing_publication["value"],
+                                              "url": "https://example.github.io/"}
+        self.assertEqual([(c.action, c.fields) for c in self.plan()], [("update", ["url"])])
+
+
+class FetchTests(unittest.TestCase):
+    def test_keeps_this_publications_documents_and_the_sites_keys_only(self):
+        def entry(rkey, site):
+            return {"uri": f"at://{DID}/site.standard.document/{rkey}", "cid": rkey,
+                    "value": {"site": site, "path": "/" + rkey}}
+
+        leaflet = PUB_URI.replace(PUB, "3m6v3hmb64k2h")
+        pds = FakePds(publication={"cid": "p", "value": {}}, documents=[
+            entry("3ma7eht63lc2d", leaflet),          # another publication: ignored
+            entry("3mzwnrqmtteul", PUB_URI + "/"),    # this publication, removed page
+            entry(DOC, leaflet),                       # a key the site uses: kept, then refused
+        ])
+        publication, documents = ss.fetch_existing(pds, desired())
+        self.assertEqual(publication, {"cid": "p", "value": {}})
+        self.assertEqual(sorted(documents), sorted([DOC, "3mzwnrqmtteul"]))
+
+
+class StubPds(ss.Pds):
+    """A Pds whose HTTP calls return canned responses."""
+
+    def __init__(self, responses):
+        super().__init__("https://pds.example")
+        self.responses, self.requests = list(responses), []
+
+    def call(self, method, nsid, params=None, body=None, content_type="application/json"):
+        self.requests.append((nsid, params))
+        response = self.responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+
+class PdsTests(unittest.TestCase):
+    def test_lists_every_page(self):
+        pds = StubPds([{"records": [1, 2], "cursor": "c1"}, {"records": [3], "cursor": "c2"},
+                       {"records": []}])
+        self.assertEqual(pds.list_records(DID, ss.DOCUMENT), [1, 2, 3])
+        self.assertEqual([params.get("cursor") for _, params in pds.requests], [None, "c1", "c2"])
+
+    def test_missing_record_is_none_and_other_errors_raise(self):
+        not_found = ss.HttpError(400, "u", b'{"error": "RecordNotFound", "message": "x"}')
+        self.assertIsNone(StubPds([not_found]).get_record(DID, ss.PUBLICATION, PUB))
+        with self.assertRaises(ss.HttpError):
+            StubPds([ss.HttpError(500, "u", b"oops")]).get_record(DID, ss.PUBLICATION, PUB)
+
+
+class ImageTypeTests(unittest.TestCase):
+    def test_reads_the_type_from_the_bytes(self):
+        self.assertEqual(ss.image_type(b"\x89PNG\r\n\x1a\n...."), "image/png")
+        self.assertEqual(ss.image_type(JPEG), "image/jpeg")
+        self.assertEqual(ss.image_type(b"RIFF\0\0\0\0WEBPVP8 "), "image/webp")
+        self.assertIsNone(ss.image_type(b"<svg></svg>"))
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ layout: default
 ---
 <article>
   <p class="breadcrumb"><a href="{{ '/writing/' | relative_url }}">Writing</a></p>
-  <h1>{{ page.title }}</h1>
+  <h1>{{ page.title | markdownify | remove: "<p>" | remove: "</p>" | strip }}</h1>
   <p class="post__date"><time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %-d, %Y" }}</time></p>
   <div class="prose">
     {{ content }}
