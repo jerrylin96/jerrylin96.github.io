@@ -376,10 +376,12 @@ main {
   padding: 0.85rem 0;
 }
 
+/* Long titles in lists wrap naturally whatever their heading level. */
 .paper__title,
 .post-item__title {
   margin: 0 0 0.3rem;
   font-size: 1.125rem;
+  text-wrap: pretty;
 }
 
 .paper__title a,

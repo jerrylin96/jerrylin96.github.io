@@ -3,6 +3,7 @@
   sorted by title), then published, newest first.
     style: "full" (default), "compact" (title and venue), or "cv" (citation)
     limit: show only the first N papers
+    heading: element for paper titles (default h3; use h2 directly under the page title)
 {%- endcomment -%}
 {%- assign accepted = site.publications | where: "publication_status", "accepted" | sort: "title" -%}
 {%- assign under_review = site.publications | where: "publication_status", "under_review" | sort: "title" -%}
@@ -12,6 +13,6 @@
 {%- assign limit = include.limit | default: papers.size %}
 <ol class="papers papers--{{ style }}">
   {%- for paper in papers limit: limit %}
-  {%- include paper-item.html paper=paper style=style %}
+  {%- include paper-item.html paper=paper style=style heading=include.heading %}
   {%- endfor %}
 </ol>
