@@ -142,21 +142,27 @@ missing. CI fails if a paper or post has no key.
 
 ### Publishing the records
 
-Publish after the change is live on <https://jlin404.com>:
+Publish after the change is live on <https://jlin404.com>, from an up-to-date
+copy of the repository (`git pull` first):
 
 1. Create an app password in Bluesky under Settings → Privacy and security →
-   App passwords. Do not use the account password.
+   App passwords. Do not use the account password. Keep it in a password
+   manager, or delete it there after publishing and create a new one next time.
 2. Preview the changes, which only reads:
 
    ```sh
    python3 scripts/standard_site.py plan
    ```
 
-3. Publish:
+3. Publish, and paste the app password when asked. It is not shown or saved:
 
    ```sh
-   ATPROTO_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx python3 scripts/standard_site.py publish
+   python3 scripts/standard_site.py publish
    ```
+
+   Setting `ATPROTO_APP_PASSWORD` in the command also works, but your shell
+   saves the command, password included, in its history; keep that for
+   automation.
 
 `publish` reads the deployed site at the `url` in `_config.yml` rather than a
 local build. It refuses to write unless that site's verification matches the
