@@ -1,4 +1,4 @@
-# jerrylin96.github.io
+# jlin404.com
 
 Source for [Jerry Lin's website](https://jlin404.com). GitHub Pages builds it
 with Jekyll and serves it at the custom domain `jlin404.com`. It is also a [Standard.site](https://standard.site)
