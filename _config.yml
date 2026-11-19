@@ -4,7 +4,7 @@
 title       : "Jerry Lin"
 description : "Research on machine learning for climate modeling by Jerry Lin, a postdoctoral researcher at Boston University."
 locale      : "en-US"
-url         : https://jerrylin96.github.io # production URL, no trailing slash
+url         : https://jlin404.com # production URL, no trailing slash; see Domain in README.md
 baseurl     : ""
 repository  : "jerrylin96/jerrylin96.github.io"
 timezone    : America/Los_Angeles # how dates in front matter are read

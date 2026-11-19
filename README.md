@@ -1,7 +1,7 @@
 # jerrylin96.github.io
 
-Source for [Jerry Lin's website](https://jerrylin96.github.io). GitHub Pages
-builds it with Jekyll. It is also a [Standard.site](https://standard.site)
+Source for [Jerry Lin's website](https://jlin404.com). GitHub Pages builds it
+with Jekyll and serves it at the custom domain `jlin404.com`. It is also a [Standard.site](https://standard.site)
 publication on the AT Protocol: each paper and post is published as a record
 that Standard.site readers and search indexes can find and verify.
 
@@ -23,6 +23,23 @@ Standard.site publication icon), `images/favicon-32.png` and
 `images/apple-touch-icon.png` are square crops of `images/bio-photo.jpg`. To
 change the photo, replace all four, then run `publish` so the publication record
 gets the new icon.
+
+## Domain
+
+The site is served at `jlin404.com`, the domain that is also the Bluesky handle
+`@jlin404.com`. GitHub Pages hosts it under that custom domain and redirects
+`jerrylin96.github.io` there, so old links keep working.
+
+- DNS (Namecheap): `A` records for `jlin404.com` pointing to `185.199.108.153`,
+  `185.199.109.153`, `185.199.110.153` and `185.199.111.153`; a `CNAME` for
+  `www` pointing to `jerrylin96.github.io`. The `TXT` record `_atproto`
+  verifies the Bluesky handle and is unrelated to the site.
+- GitHub: Settings → Pages → Custom domain is `jlin404.com`, with Enforce HTTPS
+  on. Setting it adds the `CNAME` file to the publishing branch.
+- `url` in `_config.yml` must be the same domain: canonical links, the sitemap,
+  redirects and the Standard.site publication record use it.
+
+See [GitHub's custom domain guide](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
 
 ## Local preview
 
@@ -125,7 +142,7 @@ missing. CI fails if a paper or post has no key.
 
 ### Publishing the records
 
-Publish after the change is live on <https://jerrylin96.github.io>:
+Publish after the change is live on <https://jlin404.com>:
 
 1. Create an app password in Bluesky under Settings → Privacy and security →
    App passwords. Do not use the account password.
