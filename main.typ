@@ -15,7 +15,7 @@
 )
 
 #v(3pt)
-ML researcher (PhD, now a postdoc) who has led large collaborations, including a \$50,000 Kaggle competition with about 700 teams and an ICML workshop, and built training and evaluation infrastructure spanning thousands of models. Now moving toward AI safety research, starting with tooling for human oversight of AI coding agents.
+ML researcher (PhD, now a postdoc) who has led large collaborations, including a \$50,000 Kaggle competition with about 700 teams and an ICML workshop, and built training and evaluation infrastructure spanning thousands of models. Recent work includes tooling for human oversight of AI coding agents.
 
 == Selected Papers
 - Signoff: Bringing Human Accountability Back to Agent-Powered Research (1st author; accepted, BayLearn 2026, peer reviewed; #link("https://github.com/jerrylin96/git-signoff")[open-source tool]) \
