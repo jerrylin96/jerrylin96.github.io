@@ -3,7 +3,7 @@
   let accent = rgb("#26428b")
   set document(title: author + " - Resume", author: author)
   set page(paper: "us-letter", margin: 0.5in)
-  set text(font: "Libertinus Serif", size: 11pt, lang: "en", ligatures: false)
+  set text(font: "Libertinus Serif", size: 10pt, lang: "en", ligatures: false)
   set par(leading: 0.65em, spacing: 0.65em)
   set list(indent: 0.8em, body-indent: 0.45em, tight: false, spacing: 5pt)
   show link: set text(fill: accent)
