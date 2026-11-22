@@ -18,7 +18,7 @@
 ML researcher (PhD, now a postdoc) who has led large collaborations, including a \$50,000 Kaggle competition with about 700 teams and an ICML workshop, and built training and evaluation infrastructure spanning thousands of models. Recent work includes tooling for human oversight of AI coding agents.
 
 == Selected Papers
-- Signoff: Bringing Human Accountability Back to Agent-Powered Research (sole author; presented at #link("https://baylearn.org/submissions.html")[BayLearn 2026], peer reviewed; #link("https://github.com/jerrylin96/git-signoff")[open-source tool]) \
+- Signoff: Bringing Human Accountability Back to Agent-Powered Research (1st author; presented at #link("https://baylearn.org/submissions.html")[BayLearn 2026], peer reviewed; #link("https://github.com/jerrylin96/git-signoff")[open-source tool]) \
   _AI oversight: an agent interviews the human behind an AI-assisted change and records demonstrated understanding as a signed, verifiable attestation in git history, so human review is checked, not assumed._
 - #link("https://arxiv.org/abs/2611.21521")[Run it Back: Autoregression vs. Video Diffusion for Final-Conditioned Weather Trajectories] (1st author; accepted, NeurIPS 2026 Climate Change AI Workshop)
 - #link("https://arxiv.org/abs/2608.19008")[Extremes on Rewind: Generating 1,000-Member Ensembles Initialized at a Final Condition] (1st author; preprint, under review)
