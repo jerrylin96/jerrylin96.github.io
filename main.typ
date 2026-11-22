@@ -79,4 +79,4 @@ ML researcher (PhD, now a postdoc) who has led large collaborations, including a
 
 == Skills & Leadership
 - Python, PyTorch (multi-GPU DDP training), Keras/KerasTuner, HPC GPU clusters (NERSC Perlmutter, Bridges-2), Apptainer, Git, GitHub Actions CI, pytest, Bash; agentic coding with Claude Code and Codex.
-- Conceived of and organized the inaugural #link("https://leap-stc.github.io/ml4esm-workshop/")[Machine Learning for Earth System Modeling (ML4ESM) Workshop] at ICML 2024.
+- Conceived and organized the first #link("https://leap-stc.github.io/ml4esm-workshop/")[Machine Learning for Earth System Modeling (ML4ESM) Workshop] at ICML 2024 (20 papers).
