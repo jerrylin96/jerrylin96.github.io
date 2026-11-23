@@ -1,2 +1,2 @@
-# Preserve the compiled artifact byte for byte, including on Windows checkouts.
-files/resume.pdf binary
+# Preserve compiled PDFs byte for byte, including on Windows checkouts.
+files/*.pdf binary

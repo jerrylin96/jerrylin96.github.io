@@ -6,6 +6,7 @@ publication_year: 2026
 publication_status: accepted
 venue: 'NeurIPS 2026 Workshop on Tackling Climate Change with Machine Learning'
 paperurl: 'https://arxiv.org/abs/2611.21521'
+posterurl: '/files/run-it-back-poster.pdf'
 citation: >-
   Lin, J., and Barnes, E. A. (2026). Run it Back: Autoregression vs. Video
   Diffusion for Final-Conditioned Weather Trajectories. <i>NeurIPS 2026 Workshop

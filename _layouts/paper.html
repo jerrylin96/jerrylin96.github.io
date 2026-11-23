@@ -6,8 +6,11 @@ layout: default
   <p class="breadcrumb"><a href="{{ '/publications/' | relative_url }}">Publications</a></p>
   <h1>{{ page.title | markdownify | remove: "<p>" | remove: "</p>" | strip }}</h1>
   <p class="paper__meta">{% include publication-meta.html paper=page %}</p>
-  {%- if external %}
-  <p class="actions"><a class="button" href="{{ external }}">Read paper</a></p>
+  {%- if external or page.posterurl %}
+  <p class="actions">
+    {% if external %}<a class="button" href="{{ external }}">Read paper</a>{% endif %}
+    {% if page.posterurl %}<a class="button button--quiet" href="{{ page.posterurl | relative_url }}">View poster (PDF)</a>{% endif %}
+  </p>
   {%- endif %}
 
   <div class="prose">

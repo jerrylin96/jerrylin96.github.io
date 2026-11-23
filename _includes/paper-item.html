@@ -28,6 +28,9 @@
     {%- endif -%}
   {%- endif -%}
   {%- if include.style == "full" and external %}
-  <p class="paper__links"><a href="{{ paper.url | relative_url }}">Details<span class="visually-hidden"> about {{ title | strip_html }}</span></a></p>
+  <p class="paper__links">
+    <a href="{{ paper.url | relative_url }}">Details<span class="visually-hidden"> about {{ title | strip_html }}</span></a>
+    {% if paper.posterurl %} · <a href="{{ paper.posterurl | relative_url }}">View poster (PDF)<span class="visually-hidden"> for {{ title | strip_html }}</span></a>{% endif %}
+  </p>
   {%- endif %}
 </li>
